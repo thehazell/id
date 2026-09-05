@@ -15,6 +15,7 @@ interface CreateIdTokenInput {
 	nonce?: string;
 	authTime?: number;
 	privateKey: string;
+	acr?: string;
 }
 
 export async function createIdToken(input: CreateIdTokenInput) {
@@ -40,6 +41,10 @@ export async function createIdToken(input: CreateIdTokenInput) {
 
 	if (input.authTime !== undefined) {
 		payload.auth_time = input.authTime;
+	}
+
+	if (input.acr !== undefined) {
+		payload.acr = input.acr;
 	}
 
 	const encodedHeader = encodeJson(header);
