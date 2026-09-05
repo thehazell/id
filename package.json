@@ -1,41 +1,41 @@
 {
-  "version": "0.5.3",
-  "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
-  "scripts": {
-    "format": "bunx biome format --write .",
-    "check": "bunx biome check .",
-    "check:fix": "bunx biome check . --fix",
-    "dev:dashboard": "bun --cwd=apps/dashboard run dev",
-    "dev:api": "bun --cwd=apps/api run dev",
-    "build:dashboard": "bun --cwd=apps/dashboard run build",
-    "typecheck": "bunx tsc --build",
-    "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
-    "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
-    "plan": "alchemy plan",
-    "deploy": "alchemy deploy",
-    "prepare": "husky"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.5.11",
-    "@types/bun": "^1.4.0",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
-    "husky": "^9.1.7",
-    "stylelint": "^17.14.1",
-    "stylelint-config-standard": "^40.0.0",
-    "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "@effect/platform-bun": "^4.0.0-rc.112",
-    "@effect/platform-node": "^4.0.0-rc.112",
-    "@simplewebauthn/browser": "^13.3.0",
-    "@simplewebauthn/server": "^14.0.0",
-    "@simplewebauthn/types": "^12.0.0",
-    "alchemy": "^2.0.0-beta.76",
-    "effect": "^4.0.0-rc.112",
-    "wrangler": "^4.128.0"
-  }
+ "version": "0.5.3",
+ "private": true,
+ "workspaces": [
+  "apps/*"
+ ],
+ "scripts": {
+  "format": "bunx biome format --write .",
+  "check": "bunx biome check .",
+  "check:fix": "bunx biome check . --fix",
+  "dev:dashboard": "bun --cwd=apps/dashboard run dev",
+  "dev:api": "bun --cwd=apps/api run dev",
+  "build:dashboard": "bun --cwd=apps/dashboard run build",
+  "typecheck": "bunx tsc --build",
+  "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
+  "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
+  "plan": "alchemy plan",
+  "deploy": "alchemy deploy",
+  "prepare": "husky"
+ },
+ "devDependencies": {
+  "@biomejs/biome": "^2.5.11",
+  "@types/bun": "^1.4.0",
+  "@types/react": "^19.2.18",
+  "@types/react-dom": "^19.2.5",
+  "husky": "^9.1.7",
+  "stylelint": "^17.14.1",
+  "stylelint-config-standard": "^40.0.0",
+  "typescript": "^7.0.2"
+ },
+ "dependencies": {
+  "@effect/platform-bun": "^4.0.0-rc.112",
+  "@effect/platform-node": "^4.0.0-rc.112",
+  "@simplewebauthn/browser": "^13.3.0",
+  "@simplewebauthn/server": "^14.0.0",
+  "@simplewebauthn/types": "^12.0.0",
+  "alchemy": "^2.0.0-beta.76",
+  "effect": "^4.0.0-rc.112",
+  "wrangler": "^4.128.0"
+ }
 }
