@@ -53,6 +53,8 @@ discoveryRoute.get("/", (c) => {
 		code_challenge_methods_supported: ["S256"],
 
 		request_object_signing_alg_values_supported: ["none"],
+
+		request_parameter_supported: true,
 	});
 });
 
