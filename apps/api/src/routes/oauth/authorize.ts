@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { getCookie } from "hono/cookie";
 
 import { createDb } from "../../db";
 import {
@@ -7,7 +6,6 @@ import {
 	getOAuthClient,
 	validateRedirectUri,
 } from "../../lib/oauth/client";
-import { getSessionUser } from "../../lib/session";
 
 const authorizeRoute = new Hono<{
 	Bindings: Env;
@@ -60,7 +58,6 @@ authorizeRoute.get("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
-
 	const client = await getOAuthClient(db, clientId);
 
 	if (!client) {
@@ -99,7 +96,8 @@ authorizeRoute.get("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description: "One or more requested scopes are not allowed.",
+				error_description:
+					"One or more requested scopes are not allowed.",
 			},
 			400,
 		);
@@ -110,9 +108,9 @@ authorizeRoute.get("/", async (c) => {
 	params.set("client_id", client.id);
 	params.set("redirect_uri", redirectUri);
 	params.set("scope", scopes.join(" "));
+	params.set("response_type", responseType);
 	params.set("code_challenge", codeChallenge);
 	params.set("code_challenge_method", codeChallengeMethod);
-	params.set("response_type", responseType);
 
 	if (state) {
 		params.set("state", state);
@@ -122,27 +120,14 @@ authorizeRoute.get("/", async (c) => {
 		params.set("nonce", nonce);
 	}
 
-	const authorizePath = `/authorize?${params.toString()}`;
+	const authorizeUrl = new URL(
+		"/authorize",
+		`https://${c.env.DASHBOARD_DOMAIN}`,
+	);
 
-	const sessionToken = getCookie(c, "session");
+	authorizeUrl.search = params.toString();
 
-	if (!sessionToken) {
-		return c.redirect(
-			`${c.env.ORIGIN}/login?return_to=${encodeURIComponent(authorizePath)}`,
-			302,
-		);
-	}
-
-	const user = await getSessionUser(db, sessionToken);
-
-	if (!user) {
-		return c.redirect(
-			`${c.env.ORIGIN}/login?return_to=${encodeURIComponent(authorizePath)}`,
-			302,
-		);
-	}
-
-	return c.redirect(`${c.env.ORIGIN}${authorizePath}`, 302);
+	return c.redirect(authorizeUrl.toString(), 302);
 });
 
 export default authorizeRoute;

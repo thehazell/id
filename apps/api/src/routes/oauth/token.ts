@@ -19,13 +19,10 @@ import {
 } from "../../lib/oauth/tokens";
 import { hashToken } from "../../lib/token";
 
-const tokenRoute = new Hono<{
-	Bindings: Env;
-}>();
+const tokenRoute = new Hono<{ Bindings: Env }>();
 
 tokenRoute.post("/", async (c) => {
 	const body = await c.req.parseBody();
-
 	const grantType = body.grant_type;
 
 	if (grantType === "authorization_code") {
@@ -51,7 +48,6 @@ tokenRoute.post("/", async (c) => {
 		}
 
 		const db = createDb(c.env.DB);
-
 		const client = await getOAuthClient(db, clientId);
 
 		if (!client) {
@@ -87,7 +83,6 @@ tokenRoute.post("/", async (c) => {
 		}
 
 		const codeHash = await hashToken(code);
-
 		const result = await db
 			.select()
 			.from(oauthAuthorizationCodes)
@@ -202,7 +197,10 @@ tokenRoute.post("/", async (c) => {
 		const clientId = body.client_id;
 		const clientSecret = body.client_secret;
 
-		if (typeof refreshTokenValue !== "string" || typeof clientId !== "string") {
+		if (
+			typeof refreshTokenValue !== "string" ||
+			typeof clientId !== "string"
+		) {
 			return c.json(
 				{
 					error: "invalid_request",
@@ -212,7 +210,6 @@ tokenRoute.post("/", async (c) => {
 		}
 
 		const db = createDb(c.env.DB);
-
 		const client = await getOAuthClient(db, clientId);
 
 		if (!client) {
