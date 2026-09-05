@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+
 import { Fingerprint } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
 
@@ -9,16 +10,18 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
 import PreAuthLayout from "@/layouts/PreAuthLayout";
-import { login, verifyPasskeyLogin, getPasskeyLoginOptions } from "@/lib/api";
+import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
 
 export interface LoginSearch {
 	return_to?: string;
+	prompt?: string;
 }
 
 export const Route = createFileRoute("/login")({
 	validateSearch: (search: Record<string, unknown>): LoginSearch => ({
 		return_to:
 			typeof search.return_to === "string" ? search.return_to : undefined,
+		prompt: typeof search.prompt === "string" ? search.prompt : undefined,
 	}),
 	component: LoginPage,
 });
@@ -46,12 +49,13 @@ function LoginPage() {
 	const toast = useToast();
 	const navigate = useNavigate();
 
-	const { return_to } = Route.useSearch();
+	const { return_to, prompt } = Route.useSearch();
+
+	const forceLogin = prompt === "login";
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [rememberMe, setRememberMe] = useState(false);
-
 	const [submitting, setSubmitting] = useState(false);
 	const [passkeySubmitting, setPasskeySubmitting] = useState(false);
 
@@ -61,7 +65,13 @@ function LoginPage() {
 		const destination = getSafeReturnTo(return_to);
 
 		if (destination) {
-			window.location.href = destination;
+			const url = new URL(destination, window.location.origin);
+
+			if (forceLogin) {
+				url.searchParams.delete("prompt");
+			}
+
+			window.location.href = url.toString();
 			return;
 		}
 
@@ -111,11 +121,13 @@ function LoginPage() {
 			<div>
 				<div className="mb-8">
 					<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
-						Welcome back
+						{forceLogin ? "Confirm your identity" : "Welcome back"}
 					</h1>
 
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Sign in to continue to your Maze account.
+						{forceLogin
+							? "Sign in again to continue to this application."
+							: "Sign in to continue to your Maze account."}
 					</p>
 				</div>
 
@@ -162,7 +174,9 @@ function LoginPage() {
 							type="password"
 							autoComplete="current-password"
 							value={password}
-							onChange={(event) => setPassword(event.target.value)}
+							onChange={(event) =>
+								setPassword(event.target.value)
+							}
 							placeholder="Enter your password"
 							required
 							disabled={submitting || passkeySubmitting}
@@ -173,7 +187,9 @@ function LoginPage() {
 						<input
 							type="checkbox"
 							checked={rememberMe}
-							onChange={(event) => setRememberMe(event.target.checked)}
+							onChange={(event) =>
+								setRememberMe(event.target.checked)
+							}
 							disabled={submitting || passkeySubmitting}
 							className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
 						/>
