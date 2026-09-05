@@ -32,7 +32,9 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 		const contentType = c.req.header("Content-Type") ?? "";
 
 		if (
-			contentType.toLowerCase().startsWith("application/x-www-form-urlencoded")
+			contentType
+				.toLowerCase()
+				.startsWith("application/x-www-form-urlencoded")
 		) {
 			const body = await c.req.parseBody();
 
@@ -83,6 +85,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 			locale: users.locale,
 			emailVerifiedAt: users.emailVerifiedAt,
 			updatedAt: users.updatedAt,
+			name: users.displayName,
 		})
 		.from(users)
 		.where(eq(users.id, accessToken.userId))
