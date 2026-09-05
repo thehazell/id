@@ -10,10 +10,10 @@
   "db:migrate": "wrangler d1 migrations apply DB --remote"
  },
  "devDependencies": {
-  "@cloudflare/workers-types": "^5.20260902.1",
-  "@types/bun": "latest",
-  "drizzle-kit": "^1.0.0-rc.4",
-  "wrangler": "latest"
+  "@cloudflare/workers-types": "5.20260902.1",
+  "@types/bun": "1.4.1",
+  "drizzle-kit": "1.0.0-rc.4",
+  "wrangler": "4.129.0"
  },
  "peerDependencies": {
   "typescript": "^7.0.2"
