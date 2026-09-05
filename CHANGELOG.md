@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/thehazell/id/compare/v0.5.2...v0.5.3) (2026-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @simplewebauthn/server to v14 ([#30](https://github.com/thehazell/id/issues/30)) ([b95d8ac](https://github.com/thehazell/id/commit/b95d8ac8a8a82c25806d0e80c25ce7ba865b0f09))
+
 ## [0.5.1](https://github.com/thehazell/id/compare/v0.5.0...v0.5.1) (2026-09-05)
 
 
