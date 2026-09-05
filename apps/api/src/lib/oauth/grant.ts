@@ -15,9 +15,7 @@ function parseGrantScopes(scopes: string): string[] {
 			return [];
 		}
 
-		return parsed.filter(
-			(scope): scope is string => typeof scope === "string",
-		);
+		return parsed.filter((scope): scope is string => typeof scope === "string");
 	} catch {
 		return [];
 	}
@@ -42,10 +40,7 @@ export async function getOAuthGrant(
 		.select()
 		.from(oauthGrants)
 		.where(
-			and(
-				eq(oauthGrants.userId, userId),
-				eq(oauthGrants.clientId, clientId),
-			),
+			and(eq(oauthGrants.userId, userId), eq(oauthGrants.clientId, clientId)),
 		)
 		.limit(1);
 
