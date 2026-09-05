@@ -96,8 +96,7 @@ authorizeRoute.get("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description:
-					"One or more requested scopes are not allowed.",
+				error_description: "One or more requested scopes are not allowed.",
 			},
 			400,
 		);

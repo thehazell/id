@@ -100,9 +100,7 @@ export default function ClientModal({
 			toast.success("OAuth client created.");
 		} catch (error) {
 			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to save OAuth client.",
+				error instanceof Error ? error.message : "Unable to save OAuth client.",
 			);
 		} finally {
 			setSaving(false);
@@ -148,14 +146,12 @@ export default function ClientModal({
 						</p>
 
 						<p className="mt-2 text-xs text-amber-200/70">
-							Save these credentials now. The client secret will
-							not be shown again.
+							Save these credentials now. The client secret will not be shown
+							again.
 						</p>
 
 						<div className="mt-4">
-							<p className="text-xs font-medium text-amber-300">
-								Client ID
-							</p>
+							<p className="text-xs font-medium text-amber-300">Client ID</p>
 
 							<div className="mt-2 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
 								{createdClientId}
@@ -166,9 +162,7 @@ export default function ClientModal({
 								variant="secondary"
 								className="mt-3 w-full"
 								onClick={() => {
-									void navigator.clipboard.writeText(
-										createdClientId,
-									);
+									void navigator.clipboard.writeText(createdClientId);
 									toast.success("Client ID copied.");
 								}}
 							>
@@ -191,9 +185,7 @@ export default function ClientModal({
 									variant="secondary"
 									className="mt-3 w-full"
 									onClick={() => {
-										void navigator.clipboard.writeText(
-											secret,
-										);
+										void navigator.clipboard.writeText(secret);
 										toast.success("Client secret copied.");
 									}}
 								>
@@ -236,9 +228,7 @@ export default function ClientModal({
 							<Button
 								type="button"
 								variant={
-									clientType === "confidential"
-										? "primary"
-										: "secondary"
+									clientType === "confidential" ? "primary" : "secondary"
 								}
 								onClick={() => setClientType("confidential")}
 								disabled={saving}
@@ -248,11 +238,7 @@ export default function ClientModal({
 
 							<Button
 								type="button"
-								variant={
-									clientType === "public"
-										? "primary"
-										: "secondary"
-								}
+								variant={clientType === "public" ? "primary" : "secondary"}
 								onClick={() => setClientType("public")}
 								disabled={saving}
 							>
@@ -272,9 +258,7 @@ export default function ClientModal({
 						<textarea
 							id="redirect-uris"
 							value={redirectUris}
-							onChange={(event) =>
-								setRedirectUris(event.target.value)
-							}
+							onChange={(event) => setRedirectUris(event.target.value)}
 							disabled={saving}
 							rows={4}
 							className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-zinc-500 disabled:opacity-50"
@@ -282,9 +266,7 @@ export default function ClientModal({
 					</div>
 
 					<div>
-						<p className="mb-2 text-sm font-medium text-zinc-300">
-							Scopes
-						</p>
+						<p className="mb-2 text-sm font-medium text-zinc-300">Scopes</p>
 
 						<div className="space-y-2">
 							{AVAILABLE_SCOPES.map((scope) => {
@@ -295,16 +277,12 @@ export default function ClientModal({
 										key={scope}
 										className="flex cursor-pointer items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2.5"
 									>
-										<span className="text-sm text-zinc-300">
-											{scope}
-										</span>
+										<span className="text-sm text-zinc-300">{scope}</span>
 
 										<input
 											type="checkbox"
 											checked={selected}
-											disabled={
-												scope === "openid" || saving
-											}
+											disabled={scope === "openid" || saving}
 											onChange={() => toggleScope(scope)}
 										/>
 									</label>

@@ -197,10 +197,7 @@ tokenRoute.post("/", async (c) => {
 		const clientId = body.client_id;
 		const clientSecret = body.client_secret;
 
-		if (
-			typeof refreshTokenValue !== "string" ||
-			typeof clientId !== "string"
-		) {
+		if (typeof refreshTokenValue !== "string" || typeof clientId !== "string") {
 			return c.json(
 				{
 					error: "invalid_request",
