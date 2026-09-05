@@ -30,9 +30,7 @@ function ClientsPage() {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
-	const [editingClient, setEditingClient] = useState<OAuthClient | null>(
-		null,
-	);
+	const [editingClient, setEditingClient] = useState<OAuthClient | null>(null);
 
 	const loadClients = useCallback(async () => {
 		try {
@@ -78,9 +76,7 @@ function ClientsPage() {
 		try {
 			await deleteOAuthClient(client.id);
 
-			setClients((current) =>
-				current.filter((item) => item.id !== client.id),
-			);
+			setClients((current) => current.filter((item) => item.id !== client.id));
 
 			toast.success(`Deleted "${client.name}".`);
 		} catch (error) {
@@ -108,8 +104,7 @@ function ClientsPage() {
 						OAuth clients
 					</h1>
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Manage applications that can authenticate users with
-						Maze ID.
+						Manage applications that can authenticate users with Maze ID.
 					</p>
 				</div>
 
@@ -141,9 +136,7 @@ function ClientsPage() {
 			) : (
 				<div className="overflow-hidden rounded-2xl border border-white/10 bg-white/2">
 					<div className="border-b border-white/8 px-6 py-5">
-						<h2 className="text-sm font-medium text-white">
-							OAuth clients
-						</h2>
+						<h2 className="text-sm font-medium text-white">OAuth clients</h2>
 						<p className="mt-1 text-sm text-zinc-500">
 							Applications registered with your Maze ID instance.
 						</p>

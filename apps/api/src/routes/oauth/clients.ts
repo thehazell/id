@@ -58,8 +58,7 @@ clientsRoute.post("/", requireAdmin, async (c) => {
 
 	if (
 		body.scopes.some(
-			(scope) =>
-				!OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
+			(scope) => !OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
 		)
 	) {
 		return c.json(
@@ -132,8 +131,7 @@ clientsRoute.patch("/:id", requireAdmin, async (c) => {
 
 	if (
 		body.scopes.some(
-			(scope) =>
-				!OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
+			(scope) => !OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
 		)
 	) {
 		return c.json(
