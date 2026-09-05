@@ -196,9 +196,7 @@ tokenRoute.post("/", async (c) => {
 			authorizationCode.scope,
 		);
 
-		const scopes = new Set(
-			authorizationCode.scope.split(" ").filter(Boolean),
-		);
+		const scopes = new Set(authorizationCode.scope.split(" ").filter(Boolean));
 
 		const idToken = await createIdToken({
 			privateKey: c.env.OIDC_PRIVATE_KEY,
@@ -210,9 +208,7 @@ tokenRoute.post("/", async (c) => {
 
 			email: scopes.has("email") ? user.email : undefined,
 			emailVerified:
-				scopes.has("email") && user.emailVerifiedAt !== null
-					? true
-					: undefined,
+				scopes.has("email") && user.emailVerifiedAt !== null ? true : undefined,
 
 			displayName: scopes.has("profile") ? user.displayName : undefined,
 
@@ -236,10 +232,7 @@ tokenRoute.post("/", async (c) => {
 		const clientId = body.client_id;
 		const clientSecret = body.client_secret;
 
-		if (
-			typeof refreshTokenValue !== "string" ||
-			typeof clientId !== "string"
-		) {
+		if (typeof refreshTokenValue !== "string" || typeof clientId !== "string") {
 			return c.json(
 				{
 					error: "invalid_request",
