@@ -19,6 +19,7 @@ me.get("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
+
 	const user = await getSessionUser(db, token);
 
 	if (!user) {
@@ -34,11 +35,26 @@ me.get("/", async (c) => {
 		user: {
 			id: user.id,
 			email: user.email,
+
 			displayName: user.displayName,
+			givenName: user.givenName,
+			familyName: user.familyName,
+			middleName: user.middleName,
+			nickname: user.nickname,
+			preferredUsername: user.preferredUsername,
+
+			profileUrl: user.profileUrl,
+			profileImageKey: user.profileImageKey,
+			website: user.website,
+
+			gender: user.gender,
+			birthdate: user.birthdate,
+			zoneinfo: user.zoneinfo,
+			locale: user.locale,
+
 			emailVerifiedAt: user.emailVerifiedAt,
 			createdAt: user.createdAt,
 			isAdmin: user.isAdmin,
-			profileImageKey: user.profileImageKey,
 		},
 	});
 });

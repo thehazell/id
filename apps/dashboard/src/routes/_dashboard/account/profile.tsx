@@ -33,13 +33,49 @@ function ProfilePage() {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const [displayName, setDisplayName] = useState("");
+	const [givenName, setGivenName] = useState("");
+	const [familyName, setFamilyName] = useState("");
+	const [middleName, setMiddleName] = useState("");
+	const [nickname, setNickname] = useState("");
+	const [preferredUsername, setPreferredUsername] = useState("");
+	const [profileUrl, setProfileUrl] = useState("");
+	const [website, setWebsite] = useState("");
+	const [gender, setGender] = useState("");
+	const [birthdate, setBirthdate] = useState("");
+	const [zoneinfo, setZoneinfo] = useState("");
+	const [locale, setLocale] = useState("");
+
 	const [saving, setSaving] = useState(false);
 	const [avatarSaving, setAvatarSaving] = useState(false);
 	const [avatarVersion, setAvatarVersion] = useState<number | null>(null);
 
 	useEffect(() => {
 		setDisplayName(user?.displayName ?? "");
-	}, [user?.displayName]);
+		setGivenName(user?.givenName ?? "");
+		setFamilyName(user?.familyName ?? "");
+		setMiddleName(user?.middleName ?? "");
+		setNickname(user?.nickname ?? "");
+		setPreferredUsername(user?.preferredUsername ?? "");
+		setProfileUrl(user?.profileUrl ?? "");
+		setWebsite(user?.website ?? "");
+		setGender(user?.gender ?? "");
+		setBirthdate(user?.birthdate ?? "");
+		setZoneinfo(user?.zoneinfo ?? "");
+		setLocale(user?.locale ?? "");
+	}, [
+		user?.displayName,
+		user?.givenName,
+		user?.familyName,
+		user?.middleName,
+		user?.nickname,
+		user?.preferredUsername,
+		user?.profileUrl,
+		user?.website,
+		user?.gender,
+		user?.birthdate,
+		user?.zoneinfo,
+		user?.locale,
+	]);
 
 	useEffect(() => {
 		if (!user?.profileImageKey) {
@@ -77,9 +113,19 @@ function ProfilePage() {
 		);
 	}
 
-	const trimmedName = displayName.trim();
-	const originalName = user.displayName ?? "";
-	const isDirty = trimmedName !== originalName;
+	const isDirty =
+		displayName.trim() !== (user.displayName ?? "") ||
+		givenName.trim() !== (user.givenName ?? "") ||
+		familyName.trim() !== (user.familyName ?? "") ||
+		middleName.trim() !== (user.middleName ?? "") ||
+		nickname.trim() !== (user.nickname ?? "") ||
+		preferredUsername.trim() !== (user.preferredUsername ?? "") ||
+		profileUrl.trim() !== (user.profileUrl ?? "") ||
+		website.trim() !== (user.website ?? "") ||
+		gender.trim() !== (user.gender ?? "") ||
+		birthdate.trim() !== (user.birthdate ?? "") ||
+		zoneinfo.trim() !== (user.zoneinfo ?? "") ||
+		locale.trim() !== (user.locale ?? "");
 
 	function openFilePicker() {
 		fileInputRef.current?.click();
@@ -91,6 +137,7 @@ function ProfilePage() {
 		>[0],
 	) {
 		const file = event.target.files?.[0];
+
 		event.target.value = "";
 
 		if (!file) {
@@ -112,6 +159,7 @@ function ProfilePage() {
 		try {
 			await uploadProfileAvatar(file);
 			await refresh();
+
 			toast.success("Profile picture updated.");
 		} catch (error) {
 			toast.error(
@@ -130,6 +178,7 @@ function ProfilePage() {
 		try {
 			await deleteProfileAvatar();
 			await refresh();
+
 			toast.success("Profile picture removed.");
 		} catch (error) {
 			toast.error(
@@ -154,8 +203,23 @@ function ProfilePage() {
 		setSaving(true);
 
 		try {
-			await updateProfile(trimmedName);
+			await updateProfile({
+				displayName: displayName.trim(),
+				givenName: givenName.trim(),
+				familyName: familyName.trim(),
+				middleName: middleName.trim(),
+				nickname: nickname.trim(),
+				preferredUsername: preferredUsername.trim(),
+				profileUrl: profileUrl.trim(),
+				website: website.trim(),
+				gender: gender.trim(),
+				birthdate: birthdate.trim(),
+				zoneinfo: zoneinfo.trim(),
+				locale: locale.trim(),
+			});
+
 			await refresh();
+
 			toast.success("Profile updated.");
 		} catch (error) {
 			toast.error(
@@ -285,6 +349,100 @@ function ProfilePage() {
 
 							<div>
 								<label
+									htmlFor="given-name"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Given name
+								</label>
+
+								<Input
+									id="given-name"
+									value={givenName}
+									onChange={(event) => setGivenName(event.target.value)}
+									placeholder="First name"
+									autoComplete="given-name"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="middle-name"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Middle name
+								</label>
+
+								<Input
+									id="middle-name"
+									value={middleName}
+									onChange={(event) => setMiddleName(event.target.value)}
+									placeholder="Middle name"
+									autoComplete="additional-name"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="family-name"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Family name
+								</label>
+
+								<Input
+									id="family-name"
+									value={familyName}
+									onChange={(event) => setFamilyName(event.target.value)}
+									placeholder="Last name"
+									autoComplete="family-name"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="nickname"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Nickname
+								</label>
+
+								<Input
+									id="nickname"
+									value={nickname}
+									onChange={(event) => setNickname(event.target.value)}
+									placeholder="Nickname"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="preferred-username"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Preferred username
+								</label>
+
+								<Input
+									id="preferred-username"
+									value={preferredUsername}
+									onChange={(event) => setPreferredUsername(event.target.value)}
+									placeholder="username"
+									autoComplete="username"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
 									htmlFor="email"
 									className="mb-2 block text-sm font-medium text-zinc-300"
 								>
@@ -306,6 +464,141 @@ function ProfilePage() {
 											: "Email not verified"}
 									</span>
 								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Profile */}
+					<div className="border-t border-white/8 px-6 py-6">
+						<div className="mb-6">
+							<h2 className="text-sm font-medium text-white">Profile</h2>
+
+							<p className="mt-1 text-sm leading-6 text-zinc-500">
+								Add links to your public profile and website.
+							</p>
+						</div>
+
+						<div className="space-y-5">
+							<div>
+								<label
+									htmlFor="profile-url"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Profile URL
+								</label>
+
+								<Input
+									id="profile-url"
+									type="url"
+									value={profileUrl}
+									onChange={(event) => setProfileUrl(event.target.value)}
+									placeholder="https://example.com/profile"
+									autoComplete="url"
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="website"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Website
+								</label>
+
+								<Input
+									id="website"
+									type="url"
+									value={website}
+									onChange={(event) => setWebsite(event.target.value)}
+									placeholder="https://example.com"
+									disabled={saving}
+								/>
+							</div>
+						</div>
+					</div>
+
+					{/* Additional information */}
+					<div className="border-t border-white/8 px-6 py-6">
+						<div className="mb-6">
+							<h2 className="text-sm font-medium text-white">
+								Additional information
+							</h2>
+
+							<p className="mt-1 text-sm leading-6 text-zinc-500">
+								Optional information that can be shared with applications when
+								authorized.
+							</p>
+						</div>
+
+						<div className="space-y-5">
+							<div>
+								<label
+									htmlFor="gender"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Gender
+								</label>
+
+								<Input
+									id="gender"
+									value={gender}
+									onChange={(event) => setGender(event.target.value)}
+									placeholder="Gender"
+									maxLength={100}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="birthdate"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Birthdate
+								</label>
+
+								<Input
+									id="birthdate"
+									type="date"
+									value={birthdate}
+									onChange={(event) => setBirthdate(event.target.value)}
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="zoneinfo"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Time zone
+								</label>
+
+								<Input
+									id="zoneinfo"
+									value={zoneinfo}
+									onChange={(event) => setZoneinfo(event.target.value)}
+									placeholder="America/New_York"
+									disabled={saving}
+								/>
+							</div>
+
+							<div>
+								<label
+									htmlFor="locale"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Locale
+								</label>
+
+								<Input
+									id="locale"
+									value={locale}
+									onChange={(event) => setLocale(event.target.value)}
+									placeholder="en-US"
+									disabled={saving}
+								/>
 							</div>
 						</div>
 					</div>

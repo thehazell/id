@@ -2,10 +2,27 @@ import { api } from "./client";
 
 export interface AuthUser {
 	id: string;
+
 	email: string;
+
 	displayName: string | null;
+	givenName: string | null;
+	familyName: string | null;
+	middleName: string | null;
+	nickname: string | null;
+	preferredUsername: string | null;
+
+	profileUrl: string | null;
 	profileImageKey: string | null;
+	website: string | null;
+
+	gender: string | null;
+	birthdate: string | null;
+	zoneinfo: string | null;
+	locale: string | null;
+
 	emailVerifiedAt: number | null;
+
 	createdAt: number;
 	isAdmin: boolean;
 }

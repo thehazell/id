@@ -46,9 +46,7 @@ function decodeRequestObject(request: string): RequestObjectClaims {
 	}
 
 	if (encodedSignature !== "") {
-		throw new Error(
-			"Unsigned request object must not contain a signature.",
-		);
+		throw new Error("Unsigned request object must not contain a signature.");
 	}
 
 	return JSON.parse(
@@ -113,8 +111,7 @@ authorizeRoute.get("/", async (c) => {
 		const state = requestClaims.state ?? queryState;
 		const nonce = requestClaims.nonce ?? queryNonce;
 
-		const codeChallenge =
-			requestClaims.code_challenge ?? queryCodeChallenge;
+		const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
 
 		const codeChallengeMethod =
 			requestClaims.code_challenge_method ?? queryCodeChallengeMethod;
@@ -126,8 +123,7 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"The response_type parameter is required.",
+					error_description: "The response_type parameter is required.",
 				},
 				400,
 			);
@@ -140,8 +136,7 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "unsupported_response_type",
-					error_description:
-						"Only the code response type is supported.",
+					error_description: "Only the code response type is supported.",
 				},
 				400,
 			);
@@ -164,8 +159,7 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"The redirect_uri parameter is required.",
+					error_description: "The redirect_uri parameter is required.",
 				},
 				400,
 			);
@@ -193,8 +187,7 @@ authorizeRoute.get("/", async (c) => {
 				return c.json(
 					{
 						error: "invalid_request",
-						error_description:
-							"The code_challenge parameter is required.",
+						error_description: "The code_challenge parameter is required.",
 					},
 					400,
 				);
@@ -290,8 +283,7 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_scope",
-					error_description:
-						"One or more requested scopes are not allowed.",
+					error_description: "One or more requested scopes are not allowed.",
 				},
 				400,
 			);
@@ -337,8 +329,7 @@ authorizeRoute.get("/", async (c) => {
 		return c.json(
 			{
 				error: "server_error",
-				error_description:
-					"The authorization request could not be processed.",
+				error_description: "The authorization request could not be processed.",
 			},
 			500,
 		);

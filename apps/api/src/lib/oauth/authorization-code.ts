@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 
 import { createDb } from "../../db";
-import { oauthAuthorizationCodes, users } from "../../db/schema";
+import { oauthAuthorizationCodes } from "../../db/schema";
 import {
 	getOAuthClient,
 	validateRedirectUri,
@@ -52,6 +52,7 @@ export async function exchangeAuthorizationCode(
 	}
 
 	const db = createDb(c.env.DB);
+
 	const client = await getOAuthClient(db, clientId);
 
 	if (!client) {
@@ -140,22 +141,6 @@ export async function exchangeAuthorizationCode(
 		return invalidGrant(c);
 	}
 
-	const userResult = await db
-		.select({
-			email: users.email,
-			displayName: users.displayName,
-			emailVerifiedAt: users.emailVerifiedAt,
-		})
-		.from(users)
-		.where(eq(users.id, authorizationCode.userId))
-		.limit(1);
-
-	const user = userResult[0];
-
-	if (!user) {
-		return invalidGrant(c);
-	}
-
 	const accessToken = await createAccessToken(
 		db,
 		client.id,
@@ -170,23 +155,13 @@ export async function exchangeAuthorizationCode(
 		authorizationCode.scope,
 	);
 
-	const scopes = new Set(authorizationCode.scope.split(" ").filter(Boolean));
-
 	const idToken = await createIdToken({
 		privateKey: c.env.OIDC_PRIVATE_KEY,
 		issuer: c.env.OIDC_ISSUER,
 		clientId: client.id,
 		userId: authorizationCode.userId,
-		nonce: authorizationCode.nonce,
+		nonce: authorizationCode.nonce ?? undefined,
 		expiresIn: ACCESS_TOKEN_DURATION / 1000,
-		email: scopes.has("email") ? user.email : undefined,
-		emailVerified: scopes.has("email")
-			? user.emailVerifiedAt !== null
-			: undefined,
-		displayName: scopes.has("profile") ? user.displayName : undefined,
-		preferredUsername: scopes.has("profile")
-			? user.email.split("@")[0]
-			: undefined,
 	});
 
 	return c.json({
