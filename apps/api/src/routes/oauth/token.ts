@@ -3,7 +3,6 @@ import { Hono } from "hono";
 
 import { createDb } from "../../db";
 import { oauthAuthorizationCodes, users } from "../../db/schema";
-
 import {
 	getOAuthClient,
 	validateRedirectUri,
@@ -22,16 +21,73 @@ import { hashToken } from "../../lib/token";
 
 const tokenRoute = new Hono<{ Bindings: Env }>();
 
+function getBasicClientCredentials(authorization: string | undefined) {
+	if (!authorization) {
+		return null;
+	}
+
+	const spaceIndex = authorization.indexOf(" ");
+
+	if (spaceIndex === -1) {
+		return null;
+	}
+
+	const scheme = authorization.slice(0, spaceIndex);
+
+	if (scheme.toLowerCase() !== "basic") {
+		return null;
+	}
+
+	const encoded = authorization.slice(spaceIndex + 1).trim();
+
+	if (!encoded) {
+		return null;
+	}
+
+	try {
+		const decoded = atob(encoded);
+		const separator = decoded.indexOf(":");
+
+		if (separator === -1) {
+			return null;
+		}
+
+		const username = decoded.slice(0, separator);
+		const password = decoded.slice(separator + 1);
+
+		return {
+			clientId: decodeURIComponent(username.replaceAll("+", " ")),
+			clientSecret: decodeURIComponent(password.replaceAll("+", " ")),
+		};
+	} catch {
+		return null;
+	}
+}
+
 tokenRoute.post("/", async (c) => {
 	const body = await c.req.parseBody();
 	const grantType = body.grant_type;
 
+	const basicCredentials = getBasicClientCredentials(
+		c.req.header("Authorization"),
+	);
+
 	if (grantType === "authorization_code") {
 		const code = body.code;
 		const redirectUri = body.redirect_uri;
-		const clientId = body.client_id;
+		const bodyClientId = body.client_id;
 		const codeVerifier = body.code_verifier;
-		const clientSecret = body.client_secret;
+		const bodyClientSecret = body.client_secret;
+
+		const clientId =
+			basicCredentials?.clientId ??
+			(typeof bodyClientId === "string" ? bodyClientId : undefined);
+
+		const clientSecret =
+			basicCredentials?.clientSecret ??
+			(typeof bodyClientSecret === "string"
+				? bodyClientSecret
+				: undefined);
 
 		if (
 			typeof code !== "string" ||
@@ -72,6 +128,15 @@ tokenRoute.post("/", async (c) => {
 					401,
 				);
 			}
+		} else if (basicCredentials) {
+			return c.json(
+				{
+					error: "invalid_request",
+					error_description:
+						"Public clients must not use client authentication.",
+				},
+				400,
+			);
 		}
 
 		if (!validateRedirectUri(client, redirectUri)) {
@@ -196,7 +261,9 @@ tokenRoute.post("/", async (c) => {
 			authorizationCode.scope,
 		);
 
-		const scopes = new Set(authorizationCode.scope.split(" ").filter(Boolean));
+		const scopes = new Set(
+			authorizationCode.scope.split(" ").filter(Boolean),
+		);
 
 		const idToken = await createIdToken({
 			privateKey: c.env.OIDC_PRIVATE_KEY,
@@ -205,13 +272,11 @@ tokenRoute.post("/", async (c) => {
 			userId: authorizationCode.userId,
 			nonce: authorizationCode.nonce,
 			expiresIn: ACCESS_TOKEN_DURATION / 1000,
-
 			email: scopes.has("email") ? user.email : undefined,
-			emailVerified:
-				scopes.has("email") && user.emailVerifiedAt !== null ? true : undefined,
-
+			emailVerified: scopes.has("email")
+				? user.emailVerifiedAt !== null
+				: undefined,
 			displayName: scopes.has("profile") ? user.displayName : undefined,
-
 			preferredUsername: scopes.has("profile")
 				? user.email.split("@")[0]
 				: undefined,
@@ -229,10 +294,23 @@ tokenRoute.post("/", async (c) => {
 
 	if (grantType === "refresh_token") {
 		const refreshTokenValue = body.refresh_token;
-		const clientId = body.client_id;
-		const clientSecret = body.client_secret;
+		const bodyClientId = body.client_id;
+		const bodyClientSecret = body.client_secret;
 
-		if (typeof refreshTokenValue !== "string" || typeof clientId !== "string") {
+		const clientId =
+			basicCredentials?.clientId ??
+			(typeof bodyClientId === "string" ? bodyClientId : undefined);
+
+		const clientSecret =
+			basicCredentials?.clientSecret ??
+			(typeof bodyClientSecret === "string"
+				? bodyClientSecret
+				: undefined);
+
+		if (
+			typeof refreshTokenValue !== "string" ||
+			typeof clientId !== "string"
+		) {
 			return c.json(
 				{
 					error: "invalid_request",
@@ -265,6 +343,15 @@ tokenRoute.post("/", async (c) => {
 					401,
 				);
 			}
+		} else if (basicCredentials) {
+			return c.json(
+				{
+					error: "invalid_request",
+					error_description:
+						"Public clients must not use client authentication.",
+				},
+				400,
+			);
 		}
 
 		const storedRefreshToken = await getRefreshToken(db, refreshTokenValue);
