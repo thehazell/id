@@ -56,8 +56,7 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "unsupported_response_type",
-				error_description:
-					"Only the authorization code flow is supported.",
+				error_description: "Only the authorization code flow is supported.",
 			},
 			400,
 		);
@@ -75,8 +74,7 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"The code_challenge parameter is required.",
+					error_description: "The code_challenge parameter is required.",
 				},
 				400,
 			);
@@ -86,8 +84,7 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"The code_challenge_method parameter is required.",
+					error_description: "The code_challenge_method parameter is required.",
 				},
 				400,
 			);
@@ -186,8 +183,7 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description:
-					"One or more requested scopes are not allowed.",
+				error_description: "One or more requested scopes are not allowed.",
 			},
 			400,
 		);
