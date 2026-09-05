@@ -165,9 +165,7 @@ function parseStringArray(value: string): string[] {
 			return [];
 		}
 
-		return parsed.filter(
-			(item): item is string => typeof item === "string",
-		);
+		return parsed.filter((item): item is string => typeof item === "string");
 	} catch {
 		return [];
 	}

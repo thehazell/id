@@ -29,9 +29,7 @@ export default function ClientCard({
 				<div className="flex items-start justify-between gap-4">
 					<div className="min-w-0">
 						<div className="flex items-center gap-3">
-							<h2 className="font-medium text-white">
-								{client.name}
-							</h2>
+							<h2 className="font-medium text-white">{client.name}</h2>
 
 							<span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-400">
 								{client.clientType}
@@ -48,10 +46,7 @@ export default function ClientCard({
 							Edit
 						</Button>
 
-						<Button
-							variant="danger"
-							onClick={() => setDeleteModalOpen(true)}
-						>
+						<Button variant="danger" onClick={() => setDeleteModalOpen(true)}>
 							Delete
 						</Button>
 					</div>
@@ -65,10 +60,7 @@ export default function ClientCard({
 
 						<div className="mt-2 space-y-1">
 							{client.redirectUris.map((uri) => (
-								<p
-									key={uri}
-									className="break-all text-sm text-zinc-400"
-								>
+								<p key={uri} className="break-all text-sm text-zinc-400">
 									{uri}
 								</p>
 							))}
@@ -102,10 +94,8 @@ export default function ClientCard({
 				<div className="p-6">
 					<p className="mt-2 text-sm leading-6 text-zinc-400">
 						Are you sure you want to delete{" "}
-						<span className="font-medium text-white">
-							{client.name}
-						</span>
-						? This action cannot be undone.
+						<span className="font-medium text-white">{client.name}</span>? This
+						action cannot be undone.
 					</p>
 
 					<div className="mt-6 flex justify-end gap-2">
@@ -117,11 +107,7 @@ export default function ClientCard({
 							Cancel
 						</Button>
 
-						<Button
-							type="button"
-							variant="danger"
-							onClick={handleDelete}
-						>
+						<Button type="button" variant="danger" onClick={handleDelete}>
 							Delete client
 						</Button>
 					</div>
