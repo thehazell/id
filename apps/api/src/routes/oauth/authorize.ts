@@ -18,6 +18,7 @@ interface RequestObjectClaims {
 	scope?: string;
 	state?: string;
 	nonce?: string;
+	prompt?: string;
 	code_challenge?: string;
 	code_challenge_method?: string;
 }
@@ -46,7 +47,9 @@ function decodeRequestObject(request: string): RequestObjectClaims {
 	}
 
 	if (encodedSignature !== "") {
-		throw new Error("Unsigned request object must not contain a signature.");
+		throw new Error(
+			"Unsigned request object must not contain a signature.",
+		);
 	}
 
 	return JSON.parse(
@@ -65,6 +68,7 @@ authorizeRoute.get("/", async (c) => {
 		const queryScope = c.req.query("scope");
 		const queryState = c.req.query("state");
 		const queryNonce = c.req.query("nonce");
+		const queryPrompt = c.req.query("prompt");
 		const queryCodeChallenge = c.req.query("code_challenge");
 		const queryCodeChallengeMethod = c.req.query("code_challenge_method");
 
@@ -98,6 +102,7 @@ authorizeRoute.get("/", async (c) => {
 		 * Request Object values take precedence over query parameters.
 		 */
 		const clientId = requestClaims.client_id ?? queryClientId;
+
 		const redirectUri = requestClaims.redirect_uri ?? queryRedirectUri;
 
 		const responseType =
@@ -110,8 +115,10 @@ authorizeRoute.get("/", async (c) => {
 		const scope = requestClaims.scope ?? queryScope;
 		const state = requestClaims.state ?? queryState;
 		const nonce = requestClaims.nonce ?? queryNonce;
+		const prompt = requestClaims.prompt ?? queryPrompt;
 
-		const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
+		const codeChallenge =
+			requestClaims.code_challenge ?? queryCodeChallenge;
 
 		const codeChallengeMethod =
 			requestClaims.code_challenge_method ?? queryCodeChallengeMethod;
@@ -123,7 +130,8 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The response_type parameter is required.",
+					error_description:
+						"The response_type parameter is required.",
 				},
 				400,
 			);
@@ -136,7 +144,8 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "unsupported_response_type",
-					error_description: "Only the code response type is supported.",
+					error_description:
+						"Only the code response type is supported.",
 				},
 				400,
 			);
@@ -159,7 +168,8 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The redirect_uri parameter is required.",
+					error_description:
+						"The redirect_uri parameter is required.",
 				},
 				400,
 			);
@@ -187,7 +197,8 @@ authorizeRoute.get("/", async (c) => {
 				return c.json(
 					{
 						error: "invalid_request",
-						error_description: "The code_challenge parameter is required.",
+						error_description:
+							"The code_challenge parameter is required.",
 					},
 					400,
 				);
@@ -283,7 +294,8 @@ authorizeRoute.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_scope",
-					error_description: "One or more requested scopes are not allowed.",
+					error_description:
+						"One or more requested scopes are not allowed.",
 				},
 				400,
 			);
@@ -315,6 +327,10 @@ authorizeRoute.get("/", async (c) => {
 			params.set("nonce", nonce);
 		}
 
+		if (prompt) {
+			params.set("prompt", prompt);
+		}
+
 		const authorizeUrl = new URL(
 			"/authorize",
 			`https://${c.env.DASHBOARD_DOMAIN}`,
@@ -329,7 +345,8 @@ authorizeRoute.get("/", async (c) => {
 		return c.json(
 			{
 				error: "server_error",
-				error_description: "The authorization request could not be processed.",
+				error_description:
+					"The authorization request could not be processed.",
 			},
 			500,
 		);

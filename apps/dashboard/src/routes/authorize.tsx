@@ -21,38 +21,35 @@ interface OAuthClientDetails {
 	name: string;
 }
 
+interface GrantResponse {
+	granted: boolean;
+}
+
 export const Route = createFileRoute("/authorize")({
 	validateSearch: (search: Record<string, unknown>): AuthorizeSearch => ({
 		client_id:
 			typeof search.client_id === "string" ? search.client_id : undefined,
-
 		redirect_uri:
-			typeof search.redirect_uri === "string" ? search.redirect_uri : undefined,
-
+			typeof search.redirect_uri === "string"
+				? search.redirect_uri
+				: undefined,
 		response_type:
 			typeof search.response_type === "string"
 				? search.response_type
 				: undefined,
-
 		scope: typeof search.scope === "string" ? search.scope : undefined,
-
 		state: typeof search.state === "string" ? search.state : undefined,
-
 		code_challenge:
 			typeof search.code_challenge === "string"
 				? search.code_challenge
 				: undefined,
-
 		code_challenge_method:
 			typeof search.code_challenge_method === "string"
 				? search.code_challenge_method
 				: undefined,
-
 		nonce: typeof search.nonce === "string" ? search.nonce : undefined,
-
 		prompt: typeof search.prompt === "string" ? search.prompt : undefined,
 	}),
-
 	component: AuthorizePage,
 });
 
@@ -67,6 +64,7 @@ function AuthorizePage() {
 	const [client, setClient] = useState<OAuthClientDetails | null>(null);
 
 	const autoApproved = useRef(false);
+	const promptNoneHandled = useRef(false);
 
 	const scopes = search.scope?.split(" ").filter(Boolean) ?? [];
 
@@ -75,6 +73,11 @@ function AuthorizePage() {
 		!search.redirect_uri ||
 		!search.response_type ||
 		!search.scope;
+
+	const requiresInteraction =
+		search.prompt === "login" || search.prompt === "consent";
+
+	const isSilent = search.prompt === "none";
 
 	useEffect(() => {
 		if (!search.client_id) {
@@ -96,75 +99,17 @@ function AuthorizePage() {
 			});
 	}, [search.client_id]);
 
-	const approve = useCallback(async () => {
-		if (missing) {
-			setError("Invalid authorization request.");
-			return;
-		}
-
-		setLoading(true);
-		setError(null);
-
-		try {
-			const response = await api<{ redirect_uri: string }>("/oauth/approve", {
-				method: "POST",
-				body: JSON.stringify({
-					client_id: search.client_id,
-					redirect_uri: search.redirect_uri,
-					response_type: search.response_type,
-					scope: search.scope,
-					state: search.state,
-					code_challenge: search.code_challenge,
-					code_challenge_method: search.code_challenge_method,
-					nonce: search.nonce,
-				}),
-			});
-
-			window.location.href = response.redirect_uri;
-		} catch (error) {
-			setError(
-				error instanceof Error
-					? error.message
-					: "Unable to authorize application.",
-			);
-			setLoading(false);
-		}
-	}, [
-		missing,
-		search.client_id,
-		search.redirect_uri,
-		search.response_type,
-		search.scope,
-		search.state,
-		search.code_challenge,
-		search.code_challenge_method,
-		search.nonce,
-	]);
-
 	useEffect(() => {
-		if (
-			missing ||
-			loadingClient ||
-			!client ||
-			checkingGrant ||
-			!hasGrant ||
-			autoApproved.current ||
-			search.prompt === "consent"
-		) {
+		if (missing || loadingClient || !client || search.prompt !== "login") {
 			return;
 		}
 
-		autoApproved.current = true;
-		void approve();
-	}, [
-		missing,
-		loadingClient,
-		client,
-		checkingGrant,
-		hasGrant,
-		search.prompt,
-		approve,
-	]);
+		const returnTo = `${window.location.pathname}${window.location.search}`;
+
+		window.location.href = `/login?return_to=${encodeURIComponent(
+			returnTo,
+		)}&prompt=login`;
+	}, [missing, loadingClient, client, search.prompt]);
 
 	useEffect(() => {
 		if (!search.client_id || !search.scope) {
@@ -172,7 +117,7 @@ function AuthorizePage() {
 			return;
 		}
 
-		if (search.prompt === "consent") {
+		if (requiresInteraction) {
 			setHasGrant(false);
 			setCheckingGrant(false);
 			return;
@@ -182,7 +127,7 @@ function AuthorizePage() {
 
 		setCheckingGrant(true);
 
-		void api<{ granted: boolean }>(
+		void api<GrantResponse>(
 			`/oauth/grant?client_id=${encodeURIComponent(
 				search.client_id,
 			)}&scope=${encodeURIComponent(search.scope)}`,
@@ -216,7 +161,126 @@ function AuthorizePage() {
 		return () => {
 			cancelled = true;
 		};
-	}, [search.client_id, search.scope, search.prompt]);
+	}, [search.client_id, search.scope, requiresInteraction]);
+
+	/*
+	 * prompt=none MUST NOT display authentication or consent UI.
+	 *
+	 * If the request cannot be satisfied silently, return
+	 * login_required to the client.
+	 */
+	useEffect(() => {
+		if (
+			!isSilent ||
+			missing ||
+			loadingClient ||
+			!client ||
+			checkingGrant ||
+			promptNoneHandled.current
+		) {
+			return;
+		}
+
+		if (hasGrant) {
+			return;
+		}
+
+		promptNoneHandled.current = true;
+
+		const url = new URL(search.redirect_uri!);
+
+		url.searchParams.set("error", "login_required");
+
+		if (search.state) {
+			url.searchParams.set("state", search.state);
+		}
+
+		window.location.href = url.toString();
+	}, [
+		isSilent,
+		missing,
+		loadingClient,
+		client,
+		checkingGrant,
+		hasGrant,
+		search.redirect_uri,
+		search.state,
+	]);
+
+	const approve = useCallback(async () => {
+		if (missing) {
+			setError("Invalid authorization request.");
+			return;
+		}
+
+		setLoading(true);
+		setError(null);
+
+		try {
+			const response = await api<{ redirect_uri: string }>(
+				"/oauth/approve",
+				{
+					method: "POST",
+					body: JSON.stringify({
+						client_id: search.client_id,
+						redirect_uri: search.redirect_uri,
+						response_type: search.response_type,
+						scope: search.scope,
+						state: search.state,
+						code_challenge: search.code_challenge,
+						code_challenge_method: search.code_challenge_method,
+						nonce: search.nonce,
+					}),
+				},
+			);
+
+			window.location.href = response.redirect_uri;
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: "Unable to authorize application.",
+			);
+
+			setLoading(false);
+		}
+	}, [
+		missing,
+		search.client_id,
+		search.redirect_uri,
+		search.response_type,
+		search.scope,
+		search.state,
+		search.code_challenge,
+		search.code_challenge_method,
+		search.nonce,
+	]);
+
+	useEffect(() => {
+		if (
+			missing ||
+			loadingClient ||
+			!client ||
+			checkingGrant ||
+			!hasGrant ||
+			autoApproved.current ||
+			requiresInteraction
+		) {
+			return;
+		}
+
+		autoApproved.current = true;
+
+		void approve();
+	}, [
+		missing,
+		loadingClient,
+		client,
+		checkingGrant,
+		hasGrant,
+		requiresInteraction,
+		approve,
+	]);
 
 	function handleDeny() {
 		if (!search.redirect_uri) {
@@ -244,14 +308,25 @@ function AuthorizePage() {
 					</h1>
 
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						The authorization request is missing required parameters.
+						The authorization request is missing required
+						parameters.
 					</p>
 				</div>
 			</div>
 		);
 	}
 
-	if (loadingClient || (checkingGrant && search.prompt !== "consent")) {
+	if (isSilent) {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+				<div className="text-sm text-zinc-500">
+					Checking authentication...
+				</div>
+			</div>
+		);
+	}
+
+	if (loadingClient || (checkingGrant && !requiresInteraction)) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
 				<div className="text-sm text-zinc-500">
@@ -274,8 +349,8 @@ function AuthorizePage() {
 					</h1>
 
 					<p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
-						Review the permissions requested by this application before
-						continuing.
+						Review the permissions requested by this application
+						before continuing.
 					</p>
 				</div>
 
@@ -306,8 +381,8 @@ function AuthorizePage() {
 						</p>
 
 						<p className="mt-1 text-sm text-zinc-500">
-							This application is requesting access to the following
-							permissions.
+							This application is requesting access to the
+							following permissions.
 						</p>
 
 						<div className="mt-4 space-y-2">
