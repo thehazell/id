@@ -163,8 +163,7 @@ async function authorizeGet(c: Context<{ Bindings: Env }>) {
 		return c.json(
 			{
 				error: "invalid_request",
-				error_description:
-					"client_id, redirect_uri, and scope are required.",
+				error_description: "client_id, redirect_uri, and scope are required.",
 			},
 			400,
 		);

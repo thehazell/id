@@ -56,8 +56,7 @@ export async function validateAuthorizationRequest(
 		if (!request.code_challenge_method) {
 			return {
 				error: "invalid_request" as const,
-				error_description:
-					"The code_challenge_method parameter is required.",
+				error_description: "The code_challenge_method parameter is required.",
 			};
 		}
 
