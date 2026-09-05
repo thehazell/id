@@ -55,7 +55,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "unsupported_response_type",
-				error_description: "Only the authorization code flow is supported.",
+				error_description:
+					"Only the authorization code flow is supported.",
 			},
 			400,
 		);
@@ -73,7 +74,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge parameter is required.",
+					error_description:
+						"The code_challenge parameter is required.",
 				},
 				400,
 			);
@@ -83,7 +85,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge_method parameter is required.",
+					error_description:
+						"The code_challenge_method parameter is required.",
 				},
 				400,
 			);
@@ -182,7 +185,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description: "One or more requested scopes are not allowed.",
+				error_description:
+					"One or more requested scopes are not allowed.",
 			},
 			400,
 		);
@@ -213,25 +217,16 @@ approveRoute.post("/", async (c) => {
 		);
 	}
 
-	const { user } = sessionRecord;
+	const { user, session } = sessionRecord;
 
-	/**
-	 * Record the user's grant for this client.
-	 */
 	await grantOAuthAccess(db, {
 		userId: user.id,
 		clientId: client.id,
 		scopes,
 	});
 
-	/**
-	 * Generate a one-time authorization code.
-	 *
-	 * Only the hash is stored in the database.
-	 */
 	const code = crypto.randomUUID();
 	const codeHash = await hashToken(code);
-
 	const now = Date.now();
 
 	await db.insert(oauthAuthorizationCodes).values({
@@ -244,6 +239,7 @@ approveRoute.post("/", async (c) => {
 		nonce: body.nonce,
 		codeChallenge: body.code_challenge,
 		codeChallengeMethod: body.code_challenge_method,
+		authTime: Math.floor(session.createdAt / 1000),
 		expiresAt: now + AUTHORIZATION_CODE_DURATION,
 		createdAt: now,
 	});
