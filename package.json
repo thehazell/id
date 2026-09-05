@@ -38,6 +38,6 @@
   "@simplewebauthn/types": "12.0.0",
   "alchemy": "2.0.0-beta.76",
   "effect": "4.0.0-rc.112",
-  "wrangler": "4.128.0"
+  "wrangler": "4.129.0"
  }
 }
