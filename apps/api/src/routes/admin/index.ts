@@ -7,6 +7,6 @@ const admin = new Hono<{ Bindings: Env }>();
 
 admin.route("/bootstrap", bootstrap);
 admin.route("/", lifecycle);
-admin.route("/users", users)
+admin.route("/users", users);
 
 export default admin;
