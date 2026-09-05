@@ -204,10 +204,7 @@ export async function getUserSessions(db: Database, userId: string) {
 		})
 		.from(sessions)
 		.where(
-			and(
-				eq(sessions.userId, userId),
-				gt(sessions.expiresAt, Date.now()),
-			),
+			and(eq(sessions.userId, userId), gt(sessions.expiresAt, Date.now())),
 		);
 }
 
@@ -278,9 +275,7 @@ export async function deleteOtherSessions(
 ) {
 	await db
 		.delete(sessions)
-		.where(
-			and(eq(sessions.userId, userId), ne(sessions.id, currentSessionId)),
-		);
+		.where(and(eq(sessions.userId, userId), ne(sessions.id, currentSessionId)));
 }
 
 /**
