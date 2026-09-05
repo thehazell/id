@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { getCookie } from "hono/cookie";
 
 import { createDb } from "../../db";
 import {
@@ -6,10 +7,7 @@ import {
 	getOAuthClient,
 	validateRedirectUri,
 } from "../../lib/oauth/client";
-
-const authorizeRoute = new Hono<{
-	Bindings: Env;
-}>();
+import { getSession } from "../../lib/session";
 
 interface RequestObjectClaims {
 	client_id?: string;
@@ -19,47 +17,84 @@ interface RequestObjectClaims {
 	state?: string;
 	nonce?: string;
 	prompt?: string;
+	max_age?: number | string;
 	code_challenge?: string;
 	code_challenge_method?: string;
 }
 
+/**
+ * Decodes and validates an unsigned OIDC Request Object.
+ *
+ * Maze ID currently supports only Request Objects using `alg: "none"`
+ * with an empty signature.
+ *
+ * @param request - Compact JWT-formatted Request Object.
+ * @returns The claims contained in the Request Object.
+ * @throws If the Request Object is malformed or uses an unsupported algorithm.
+ */
 function decodeRequestObject(request: string): RequestObjectClaims {
 	const parts = request.split(".");
 
 	if (parts.length !== 3) {
-		throw new Error("Invalid request object.");
+		throw new Error("Invalid request object");
 	}
 
 	const [encodedHeader, encodedPayload, encodedSignature] = parts;
 
-	if (!encodedHeader || !encodedPayload || encodedSignature === undefined) {
-		throw new Error("Invalid request object.");
+	if (encodedSignature !== "") {
+		throw new Error("Request object must use an empty signature");
 	}
 
 	const header = JSON.parse(
 		atob(encodedHeader.replace(/-/g, "+").replace(/_/g, "/")),
-	) as {
-		alg?: string;
-	};
+	) as { alg?: string };
 
 	if (header.alg !== "none") {
-		throw new Error("Unsupported request object signing algorithm.");
+		throw new Error("Unsupported request object algorithm");
 	}
 
-	if (encodedSignature !== "") {
-		throw new Error("Unsigned request object must not contain a signature.");
-	}
-
-	return JSON.parse(
+	const payload = JSON.parse(
 		atob(encodedPayload.replace(/-/g, "+").replace(/_/g, "/")),
 	) as RequestObjectClaims;
+
+	return payload;
 }
 
-authorizeRoute.get("/", async (c) => {
+/**
+ * Redirects the user agent to a validated OAuth redirect URI with an
+ * authorization error.
+ *
+ * @param redirectUri - The client's validated redirect URI.
+ * @param error - OAuth/OIDC error code.
+ * @param state - Optional state value from the authorization request.
+ * @param errorDescription - Optional human-readable error description.
+ * @returns A 302 redirect response.
+ */
+function redirectWithError(
+	redirectUri: string,
+	error: string,
+	state?: string,
+	errorDescription?: string,
+) {
+	const url = new URL(redirectUri);
+
+	url.searchParams.set("error", error);
+
+	if (errorDescription) {
+		url.searchParams.set("error_description", errorDescription);
+	}
+
+	if (state) {
+		url.searchParams.set("state", state);
+	}
+
+	return Response.redirect(url.toString(), 302);
+}
+
+const authorize = new Hono<{ Bindings: Env }>();
+
+authorize.get("/", async (c) => {
 	try {
-		/**
-		 * Read normal authorization request parameters.
-		 */
 		const queryClientId = c.req.query("client_id");
 		const queryRedirectUri = c.req.query("redirect_uri");
 		const queryResponseType = c.req.query("response_type");
@@ -67,142 +102,95 @@ authorizeRoute.get("/", async (c) => {
 		const queryState = c.req.query("state");
 		const queryNonce = c.req.query("nonce");
 		const queryPrompt = c.req.query("prompt");
+		const queryMaxAge = c.req.query("max_age");
 		const queryCodeChallenge = c.req.query("code_challenge");
 		const queryCodeChallengeMethod = c.req.query("code_challenge_method");
+		const request = c.req.query("request");
 
-		const requestObject = c.req.query("request");
-
-		/**
-		 * Parse the Request Object if one was supplied.
-		 *
-		 * Request Object parameters take precedence over
-		 * corresponding parameters supplied in the query.
-		 */
 		let requestClaims: RequestObjectClaims = {};
 
-		if (requestObject) {
-			try {
-				requestClaims = decodeRequestObject(requestObject);
-			} catch {
-				return c.json(
-					{
-						error: "invalid_request",
-						error_description: "Invalid request object.",
-					},
-					400,
-				);
-			}
+		if (request) {
+			requestClaims = decodeRequestObject(request);
 		}
 
-		/**
-		 * Resolve parameters.
-		 *
-		 * Request Object values take precedence over query parameters.
-		 */
 		const clientId = requestClaims.client_id ?? queryClientId;
-
 		const redirectUri = requestClaims.redirect_uri ?? queryRedirectUri;
-
-		const responseType =
-			typeof requestClaims.response_type === "string"
-				? requestClaims.response_type
-				: Array.isArray(requestClaims.response_type)
-					? requestClaims.response_type.join(" ")
-					: queryResponseType;
-
+		const responseType = requestClaims.response_type ?? queryResponseType;
 		const scope = requestClaims.scope ?? queryScope;
 		const state = requestClaims.state ?? queryState;
 		const nonce = requestClaims.nonce ?? queryNonce;
 		const prompt = requestClaims.prompt ?? queryPrompt;
-
-		const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
-
+		const maxAge =
+			requestClaims.max_age !== undefined
+				? String(requestClaims.max_age)
+				: queryMaxAge;
+		const codeChallenge =
+			requestClaims.code_challenge ?? queryCodeChallenge;
 		const codeChallengeMethod =
 			requestClaims.code_challenge_method ?? queryCodeChallengeMethod;
 
-		/**
-		 * response_type is required.
-		 */
+		if (!clientId || !redirectUri || !scope) {
+			return c.json(
+				{
+					error: "invalid_request",
+					error_description:
+						"client_id, redirect_uri, and scope are required.",
+				},
+				400,
+			);
+		}
+
 		if (!responseType) {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The response_type parameter is required.",
+					error_description:
+						"The response_type parameter is required.",
 				},
 				400,
 			);
 		}
 
-		/**
-		 * Maze ID currently supports only the authorization code flow.
-		 */
-		if (responseType !== "code") {
+		const normalizedResponseTypes = Array.isArray(responseType)
+			? responseType
+			: responseType.split(" ").filter(Boolean);
+
+		if (
+			normalizedResponseTypes.length !== 1 ||
+			normalizedResponseTypes[0] !== "code"
+		) {
 			return c.json(
 				{
 					error: "unsupported_response_type",
-					error_description: "Only the code response type is supported.",
+					error_description:
+						"Only the code response type is supported.",
 				},
 				400,
 			);
 		}
 
-		/**
-		 * Required authorization request parameters.
-		 */
-		if (!clientId) {
-			return c.json(
-				{
-					error: "invalid_request",
-					error_description: "The client_id parameter is required.",
-				},
-				400,
-			);
-		}
+		if (maxAge !== undefined) {
+			const parsedMaxAge = Number(maxAge);
 
-		if (!redirectUri) {
-			return c.json(
-				{
-					error: "invalid_request",
-					error_description: "The redirect_uri parameter is required.",
-				},
-				400,
-			);
-		}
-
-		if (!scope) {
-			return c.json(
-				{
-					error: "invalid_request",
-					error_description: "The scope parameter is required.",
-				},
-				400,
-			);
-		}
-
-		/**
-		 * Validate PKCE when supplied.
-		 *
-		 * PKCE is optional for this authorization request. If either
-		 * parameter is supplied, both must be present and the method
-		 * must be S256.
-		 */
-		if (codeChallenge || codeChallengeMethod) {
-			if (!codeChallenge) {
-				return c.json(
-					{
-						error: "invalid_request",
-						error_description: "The code_challenge parameter is required.",
-					},
-					400,
-				);
-			}
-
-			if (!codeChallengeMethod) {
+			if (!Number.isInteger(parsedMaxAge) || parsedMaxAge < 0) {
 				return c.json(
 					{
 						error: "invalid_request",
 						error_description:
-							"The code_challenge_method parameter is required.",
+							"The max_age parameter must be a non-negative integer.",
+					},
+					400,
+				);
+			}
+		}
+
+		if (codeChallenge || codeChallengeMethod) {
+			if (!codeChallenge || !codeChallengeMethod) {
+				return c.json(
+					{
+						error: "invalid_request",
+						error_description:
+							"Both code_challenge and code_challenge_method are required.",
 					},
 					400,
 				);
@@ -212,136 +200,140 @@ authorizeRoute.get("/", async (c) => {
 				return c.json(
 					{
 						error: "invalid_request",
-						error_description:
-							"Only the S256 code challenge method is supported.",
+						error_description: "Only S256 PKCE is supported.",
 					},
 					400,
 				);
 			}
 		}
 
-		/**
-		 * Load the client.
-		 */
 		const db = createDb(c.env.DB);
+
 		const client = await getOAuthClient(db, clientId);
 
 		if (!client) {
 			return c.json(
 				{
-					error: "invalid_request",
-					error_description: "Unknown client.",
+					error: "invalid_client",
 				},
 				400,
 			);
 		}
 
-		/**
-		 * Validate the redirect URI.
-		 *
-		 * redirectUri has already been resolved above, with the
-		 * Request Object taking precedence over the query parameter.
-		 */
 		if (!validateRedirectUri(client, redirectUri)) {
 			return c.json(
 				{
-					error: "invalid_redirect_uri",
-					error_description: "Invalid redirect URI.",
+					error: "invalid_request",
+					error_description: "Invalid redirect_uri.",
 				},
 				400,
 			);
 		}
 
-		/**
-		 * Parse and normalize scopes.
-		 */
 		const scopes = [...new Set(scope.split(" ").filter(Boolean))];
 
-		if (scopes.length === 0) {
-			return c.json(
-				{
-					error: "invalid_scope",
-					error_description: "At least one scope is required.",
-				},
-				400,
-			);
-		}
-
-		/**
-		 * OIDC requires the openid scope.
-		 */
 		if (!scopes.includes("openid")) {
-			return c.json(
-				{
-					error: "invalid_scope",
-					error_description: "The openid scope is required.",
-				},
-				400,
+			return redirectWithError(
+				redirectUri,
+				"invalid_scope",
+				state,
+				"The openid scope is required.",
 			);
 		}
 
-		/**
-		 * Ensure the requested scopes are allowed for the client.
-		 */
 		if (!clientSupportsScopes(client, scopes)) {
-			return c.json(
-				{
-					error: "invalid_scope",
-					error_description: "One or more requested scopes are not allowed.",
-				},
-				400,
+			return redirectWithError(
+				redirectUri,
+				"invalid_scope",
+				state,
+				"One or more requested scopes are not supported by the client.",
 			);
 		}
 
-		/**
-		 * Build the dashboard authorization request.
+		const sessionToken = getCookie(c, "session");
+		const session = sessionToken
+			? await getSession(db, sessionToken)
+			: null;
+
+		/*
+		 * `session.createdAt` represents the time of the most recent
+		 * authentication because reauthentication creates a new session.
+		 *
+		 * This check MUST happen on the authorization server rather than
+		 * relying on the dashboard to enforce `max_age`.
 		 */
-		const params = new URLSearchParams();
+		const authenticationAge = session
+			? Math.floor(Date.now() / 1000) -
+				Math.floor(session.createdAt / 1000)
+			: null;
 
-		params.set("client_id", client.id);
-		params.set("redirect_uri", redirectUri);
-		params.set("response_type", responseType);
-		params.set("scope", scopes.join(" "));
+		const maxAgeExpired =
+			maxAge !== undefined &&
+			(authenticationAge === null || authenticationAge >= Number(maxAge));
 
-		if (codeChallenge) {
-			params.set("code_challenge", codeChallenge);
+		const requiresLogin = !session || maxAgeExpired;
+
+		/*
+		 * `prompt=none` forbids user interaction. If the user is not
+		 * authenticated or their authentication is older than `max_age`,
+		 * authorization must fail without displaying a login screen.
+		 */
+		if (requiresLogin && prompt === "none") {
+			return redirectWithError(redirectUri, "login_required", state);
 		}
 
-		if (codeChallengeMethod) {
-			params.set("code_challenge_method", codeChallengeMethod);
+		const authorizeUrl = new URL("https://id.hzel.org/authorize");
+
+		authorizeUrl.searchParams.set("client_id", clientId);
+		authorizeUrl.searchParams.set("redirect_uri", redirectUri);
+		authorizeUrl.searchParams.set("response_type", "code");
+		authorizeUrl.searchParams.set("scope", scopes.join(" "));
+
+		if (state !== undefined) {
+			authorizeUrl.searchParams.set("state", state);
 		}
 
-		if (state) {
-			params.set("state", state);
+		if (nonce !== undefined) {
+			authorizeUrl.searchParams.set("nonce", nonce);
 		}
 
-		if (nonce) {
-			params.set("nonce", nonce);
+		/*
+		 * If max_age has expired, force the login UI to perform
+		 * reauthentication. The server will verify the resulting new
+		 * authentication when this authorization request is processed again.
+		 */
+		if (requiresLogin) {
+			authorizeUrl.searchParams.set("prompt", "login");
+		} else if (prompt !== undefined) {
+			authorizeUrl.searchParams.set("prompt", prompt);
 		}
 
-		if (prompt) {
-			params.set("prompt", prompt);
+		if (maxAge !== undefined) {
+			authorizeUrl.searchParams.set("max_age", maxAge);
 		}
 
-		const authorizeUrl = new URL(
-			"/authorize",
-			`https://${c.env.DASHBOARD_DOMAIN}`,
-		);
+		if (codeChallenge !== undefined) {
+			authorizeUrl.searchParams.set("code_challenge", codeChallenge);
+		}
 
-		authorizeUrl.search = params.toString();
+		if (codeChallengeMethod !== undefined) {
+			authorizeUrl.searchParams.set(
+				"code_challenge_method",
+				codeChallengeMethod,
+			);
+		}
 
 		return c.redirect(authorizeUrl.toString(), 302);
 	} catch (error) {
-		console.error("OAuth authorization request failed:", error);
+		console.error("OAuth authorization error:", error);
 
 		return c.json(
 			{
 				error: "server_error",
-				error_description: "The authorization request could not be processed.",
 			},
 			500,
 		);
 	}
 });
 
-export default authorizeRoute;
+export default authorize;

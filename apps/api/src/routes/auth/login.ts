@@ -6,7 +6,7 @@ import { createDb } from "../../db";
 import { users } from "../../db/schema";
 import { setSessionCookie } from "../../lib/cookie";
 import { verifyPassword } from "../../lib/password";
-import { createSession, getSession } from "../../lib/session";
+import { createSession, deleteSession, getSession } from "../../lib/session";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -21,11 +21,13 @@ login.post("/", async (c) => {
 		email?: string;
 		password?: string;
 		rememberMe?: boolean;
+		prompt?: string;
 	}>();
 
 	const email = body.email?.trim().toLowerCase();
 	const password = body.password;
 	const rememberMe = body.rememberMe ?? false;
+	const forceReauthentication = body.prompt === "login";
 
 	if (!email || !password) {
 		return c.json(
@@ -66,10 +68,9 @@ login.post("/", async (c) => {
 		);
 	}
 
-	// Reuse an existing valid session for this account.
 	const existingToken = getCookie(c, "session");
 
-	if (existingToken) {
+	if (!forceReauthentication && existingToken) {
 		const existingSession = await getSession(db, existingToken);
 
 		if (existingSession && existingSession.userId === user.id) {
@@ -80,6 +81,10 @@ login.post("/", async (c) => {
 				},
 			});
 		}
+	}
+
+	if (forceReauthentication && existingToken) {
+		await deleteSession(db, existingToken);
 	}
 
 	const cf = c.req.raw.cf as CloudflareRequestProperties | undefined;

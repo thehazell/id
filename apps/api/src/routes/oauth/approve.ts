@@ -9,7 +9,7 @@ import {
 	validateRedirectUri,
 } from "../../lib/oauth/client";
 import { grantOAuthAccess } from "../../lib/oauth/grant";
-import { getSessionUser } from "../../lib/session";
+import { getSessionUserWithSession } from "../../lib/session";
 import { hashToken } from "../../lib/token";
 
 const AUTHORIZATION_CODE_DURATION = 60 * 1000;
@@ -55,7 +55,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "unsupported_response_type",
-				error_description: "Only the authorization code flow is supported.",
+				error_description:
+					"Only the authorization code flow is supported.",
 			},
 			400,
 		);
@@ -73,7 +74,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge parameter is required.",
+					error_description:
+						"The code_challenge parameter is required.",
 				},
 				400,
 			);
@@ -83,7 +85,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge_method parameter is required.",
+					error_description:
+						"The code_challenge_method parameter is required.",
 				},
 				400,
 			);
@@ -182,7 +185,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description: "One or more requested scopes are not allowed.",
+				error_description:
+					"One or more requested scopes are not allowed.",
 			},
 			400,
 		);
@@ -202,9 +206,9 @@ approveRoute.post("/", async (c) => {
 		);
 	}
 
-	const user = await getSessionUser(db, sessionToken);
+	const sessionRecord = await getSessionUserWithSession(db, sessionToken);
 
-	if (!user) {
+	if (!sessionRecord) {
 		return c.json(
 			{
 				error: "login_required",
@@ -212,6 +216,8 @@ approveRoute.post("/", async (c) => {
 			401,
 		);
 	}
+
+	const { user } = sessionRecord;
 
 	/**
 	 * Record the user's grant for this client.
