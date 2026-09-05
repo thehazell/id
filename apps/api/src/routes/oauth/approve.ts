@@ -28,6 +28,7 @@ approveRoute.post("/", async (c) => {
 		nonce?: string;
 		code_challenge?: string;
 		code_challenge_method?: string;
+		acr_values?: string;
 	}>();
 
 	/**
@@ -55,7 +56,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "unsupported_response_type",
-				error_description: "Only the authorization code flow is supported.",
+				error_description:
+					"Only the authorization code flow is supported.",
 			},
 			400,
 		);
@@ -73,7 +75,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge parameter is required.",
+					error_description:
+						"The code_challenge parameter is required.",
 				},
 				400,
 			);
@@ -83,7 +86,8 @@ approveRoute.post("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The code_challenge_method parameter is required.",
+					error_description:
+						"The code_challenge_method parameter is required.",
 				},
 				400,
 			);
@@ -182,7 +186,8 @@ approveRoute.post("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description: "One or more requested scopes are not allowed.",
+				error_description:
+					"One or more requested scopes are not allowed.",
 			},
 			400,
 		);
@@ -225,6 +230,8 @@ approveRoute.post("/", async (c) => {
 	const codeHash = await hashToken(code);
 	const now = Date.now();
 
+	const acr = body.acr_values?.trim().split(/\s+/).filter(Boolean)[0];
+
 	await db.insert(oauthAuthorizationCodes).values({
 		id: crypto.randomUUID(),
 		clientId: client.id,
@@ -238,6 +245,7 @@ approveRoute.post("/", async (c) => {
 		authTime: Math.floor(session.createdAt / 1000),
 		expiresAt: now + AUTHORIZATION_CODE_DURATION,
 		createdAt: now,
+		acr,
 	});
 
 	/**
