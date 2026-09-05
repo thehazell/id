@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getOAuthClientDetails, api } from "@/lib/api";
 import Button from "@/components/ui/Button";
+import { api, getOAuthClientDetails } from "@/lib/api";
 
 export interface AuthorizeSearch {
 	client_id?: string;
@@ -13,6 +13,7 @@ export interface AuthorizeSearch {
 	code_challenge?: string;
 	code_challenge_method?: string;
 	nonce?: string;
+	prompt?: string;
 }
 
 interface OAuthClientDetails {
@@ -24,24 +25,34 @@ export const Route = createFileRoute("/authorize")({
 	validateSearch: (search: Record<string, unknown>): AuthorizeSearch => ({
 		client_id:
 			typeof search.client_id === "string" ? search.client_id : undefined,
+
 		redirect_uri:
 			typeof search.redirect_uri === "string" ? search.redirect_uri : undefined,
+
 		response_type:
 			typeof search.response_type === "string"
 				? search.response_type
 				: undefined,
+
 		scope: typeof search.scope === "string" ? search.scope : undefined,
+
 		state: typeof search.state === "string" ? search.state : undefined,
+
 		code_challenge:
 			typeof search.code_challenge === "string"
 				? search.code_challenge
 				: undefined,
+
 		code_challenge_method:
 			typeof search.code_challenge_method === "string"
 				? search.code_challenge_method
 				: undefined,
+
 		nonce: typeof search.nonce === "string" ? search.nonce : undefined,
+
+		prompt: typeof search.prompt === "string" ? search.prompt : undefined,
 	}),
+
 	component: AuthorizePage,
 });
 
@@ -50,8 +61,12 @@ function AuthorizePage() {
 
 	const [loading, setLoading] = useState(false);
 	const [loadingClient, setLoadingClient] = useState(true);
+	const [checkingGrant, setCheckingGrant] = useState(true);
+	const [hasGrant, setHasGrant] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [client, setClient] = useState<OAuthClientDetails | null>(null);
+
+	const autoApproved = useRef(false);
 
 	const scopes = search.scope?.split(" ").filter(Boolean) ?? [];
 
@@ -81,23 +96,7 @@ function AuthorizePage() {
 			});
 	}, [search.client_id]);
 
-	function handleDeny() {
-		if (!search.redirect_uri) {
-			window.location.href = "/";
-			return;
-		}
-
-		const url = new URL(search.redirect_uri);
-		url.searchParams.set("error", "access_denied");
-
-		if (search.state) {
-			url.searchParams.set("state", search.state);
-		}
-
-		window.location.href = url.toString();
-	}
-
-	async function handleApprove() {
+	const approve = useCallback(async () => {
 		if (missing) {
 			setError("Invalid authorization request.");
 			return;
@@ -130,6 +129,110 @@ function AuthorizePage() {
 			);
 			setLoading(false);
 		}
+	}, [
+		missing,
+		search.client_id,
+		search.redirect_uri,
+		search.response_type,
+		search.scope,
+		search.state,
+		search.code_challenge,
+		search.code_challenge_method,
+		search.nonce,
+	]);
+
+	useEffect(() => {
+		if (
+			missing ||
+			loadingClient ||
+			!client ||
+			checkingGrant ||
+			!hasGrant ||
+			autoApproved.current ||
+			search.prompt === "consent"
+		) {
+			return;
+		}
+
+		autoApproved.current = true;
+		void approve();
+	}, [
+		missing,
+		loadingClient,
+		client,
+		checkingGrant,
+		hasGrant,
+		search.prompt,
+		approve,
+	]);
+
+	useEffect(() => {
+		if (!search.client_id || !search.scope) {
+			setCheckingGrant(false);
+			return;
+		}
+
+		if (search.prompt === "consent") {
+			setHasGrant(false);
+			setCheckingGrant(false);
+			return;
+		}
+
+		let cancelled = false;
+
+		setCheckingGrant(true);
+
+		void api<{ granted: boolean }>(
+			`/oauth/grant?client_id=${encodeURIComponent(
+				search.client_id,
+			)}&scope=${encodeURIComponent(search.scope)}`,
+		)
+			.then((result) => {
+				if (cancelled) {
+					return;
+				}
+
+				setHasGrant(result.granted);
+			})
+			.catch((error) => {
+				if (cancelled) {
+					return;
+				}
+
+				setError(
+					error instanceof Error
+						? error.message
+						: "Unable to check authorization.",
+				);
+
+				setHasGrant(false);
+			})
+			.finally(() => {
+				if (!cancelled) {
+					setCheckingGrant(false);
+				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [search.client_id, search.scope, search.prompt]);
+
+	function handleDeny() {
+		if (!search.redirect_uri) {
+			window.location.href = "/";
+			return;
+		}
+
+		const url = new URL(search.redirect_uri);
+
+		url.searchParams.set("error", "access_denied");
+
+		if (search.state) {
+			url.searchParams.set("state", search.state);
+		}
+
+		window.location.href = url.toString();
 	}
 
 	if (missing) {
@@ -143,6 +246,18 @@ function AuthorizePage() {
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
 						The authorization request is missing required parameters.
 					</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (loadingClient || (checkingGrant && search.prompt !== "consent")) {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+				<div className="text-sm text-zinc-500">
+					{loadingClient
+						? "Loading application..."
+						: "Checking authorization..."}
 				</div>
 			</div>
 		);
@@ -171,9 +286,7 @@ function AuthorizePage() {
 						</p>
 
 						<h2 className="mt-2 text-lg font-medium text-white">
-							{loadingClient
-								? "Loading application..."
-								: (client?.name ?? "Unknown application")}
+							{client?.name ?? "Unknown application"}
 						</h2>
 
 						<p className="mt-1 text-sm text-zinc-500">
@@ -229,7 +342,7 @@ function AuthorizePage() {
 							type="button"
 							variant="primary"
 							disabled={loading || loadingClient || !client}
-							onClick={() => void handleApprove()}
+							onClick={() => void approve()}
 						>
 							{loading ? "Authorizing..." : "Authorize"}
 						</Button>
