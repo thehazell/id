@@ -8,14 +8,14 @@ function encodeJson(value: unknown) {
 }
 
 interface CreateIdTokenInput {
+	privateKey: string;
 	issuer: string;
-	userId: string;
 	clientId: string;
-	expiresIn: number;
+	userId: string;
 	nonce?: string;
 	authTime?: number;
-	privateKey: string;
 	acr?: string;
+	expiresIn: number;
 }
 
 export async function createIdToken(input: CreateIdTokenInput) {

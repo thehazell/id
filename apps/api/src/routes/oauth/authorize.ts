@@ -18,6 +18,7 @@ interface RequestObjectClaims {
 	nonce?: string;
 	prompt?: string;
 	max_age?: number | string;
+	acr_values?: string;
 	code_challenge?: string;
 	code_challenge_method?: string;
 }
@@ -106,6 +107,7 @@ authorize.get("/", async (c) => {
 		const queryCodeChallenge = c.req.query("code_challenge");
 		const queryCodeChallengeMethod = c.req.query("code_challenge_method");
 		const request = c.req.query("request");
+		const queryAcrValues = c.req.query("acr_values");
 
 		let requestClaims: RequestObjectClaims = {};
 
@@ -124,7 +126,12 @@ authorize.get("/", async (c) => {
 			requestClaims.max_age !== undefined
 				? String(requestClaims.max_age)
 				: queryMaxAge;
-		const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
+		const acrValues =
+			requestClaims.acr_values !== undefined
+				? requestClaims.acr_values
+				: queryAcrValues;
+		const codeChallenge =
+			requestClaims.code_challenge ?? queryCodeChallenge;
 		const codeChallengeMethod =
 			requestClaims.code_challenge_method ?? queryCodeChallengeMethod;
 
@@ -132,7 +139,8 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "client_id, redirect_uri, and scope are required.",
+					error_description:
+						"client_id, redirect_uri, and scope are required.",
 				},
 				400,
 			);
@@ -142,7 +150,8 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description: "The response_type parameter is required.",
+					error_description:
+						"The response_type parameter is required.",
 				},
 				400,
 			);
@@ -159,7 +168,8 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "unsupported_response_type",
-					error_description: "Only the code response type is supported.",
+					error_description:
+						"Only the code response type is supported.",
 				},
 				400,
 			);
@@ -247,7 +257,9 @@ authorize.get("/", async (c) => {
 		}
 
 		const sessionToken = getCookie(c, "session");
-		const session = sessionToken ? await getSession(db, sessionToken) : null;
+		const session = sessionToken
+			? await getSession(db, sessionToken)
+			: null;
 
 		/*
 		 * `session.createdAt` represents the time of the most recent
@@ -257,7 +269,8 @@ authorize.get("/", async (c) => {
 		 * relying on the dashboard to enforce `max_age`.
 		 */
 		const authenticationAge = session
-			? Math.floor(Date.now() / 1000) - Math.floor(session.createdAt / 1000)
+			? Math.floor(Date.now() / 1000) -
+				Math.floor(session.createdAt / 1000)
 			: null;
 
 		const maxAgeExpired =
@@ -288,6 +301,10 @@ authorize.get("/", async (c) => {
 
 		if (nonce !== undefined) {
 			authorizeUrl.searchParams.set("nonce", nonce);
+		}
+
+		if (acrValues !== undefined) {
+			authorizeUrl.searchParams.set("acr_values", acrValues);
 		}
 
 		/*
