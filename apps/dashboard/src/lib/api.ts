@@ -27,7 +27,9 @@ export async function api<T>(
 	const data = await response.json().catch(() => null);
 
 	if (!response.ok) {
-		throw new Error(data?.error ?? "Something went wrong. Please try again.");
+		throw new Error(
+			data?.error ?? "Something went wrong. Please try again.",
+		);
 	}
 
 	return data as T;
@@ -156,8 +158,7 @@ export function verifyPasskeyRegistration(response: unknown, name: string) {
  * WebAuthn authentication options plus the server-side
  * challenge record ID used to verify the authentication.
  */
-export interface PasskeyLoginOptions
-	extends PublicKeyCredentialRequestOptionsJSON {
+export interface PasskeyLoginOptions extends PublicKeyCredentialRequestOptionsJSON {
 	challengeId: string;
 }
 
@@ -278,6 +279,12 @@ export function updateOAuthClient(
 	return api<OAuthClientResponse>(`/oauth/clients/${clientId}`, {
 		method: "PATCH",
 		body: JSON.stringify(input),
+	});
+}
+
+export function deleteOAuthClient(clientId: string) {
+	return api<{ success: boolean }>(`/oauth/clients/${clientId}`, {
+		method: "DELETE",
 	});
 }
 
