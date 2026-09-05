@@ -93,10 +93,7 @@ export async function exchangeAuthorizationCode(
 
 	const now = Date.now();
 
-	if (
-		authorizationCode.expiresAt <= now ||
-		authorizationCode.usedAt !== null
-	) {
+	if (authorizationCode.expiresAt <= now || authorizationCode.usedAt !== null) {
 		return invalidGrant(c);
 	}
 
@@ -111,10 +108,7 @@ export async function exchangeAuthorizationCode(
 
 	if (codeChallenge !== null) {
 		if (typeof codeVerifier !== "string") {
-			return invalidRequest(
-				c,
-				"The code_verifier parameter is required.",
-			);
+			return invalidRequest(c, "The code_verifier parameter is required.");
 		}
 
 		const validCodeVerifier = await verifyCodeChallenge(
