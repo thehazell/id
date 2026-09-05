@@ -36,6 +36,7 @@ discoveryRoute.get("/", (c) => {
 			"client_secret_post",
 		],
 		code_challenge_methods_supported: ["S256"],
+		request_object_signing_alg_values_supported: ["none"],
 	});
 });
 
