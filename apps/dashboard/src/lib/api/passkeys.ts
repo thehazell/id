@@ -33,10 +33,7 @@ export function getPasskeyLoginOptions() {
 	});
 }
 
-export function verifyPasskeyLogin(
-	response: unknown,
-	challengeId: string,
-) {
+export function verifyPasskeyLogin(response: unknown, challengeId: string) {
 	return api<AuthResponse>("/api/passkeys/login/verify", {
 		method: "POST",
 		body: JSON.stringify({ response, challengeId }),
