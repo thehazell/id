@@ -89,6 +89,7 @@ export async function exchangeRefreshToken(
 		client.id,
 		storedToken.userId,
 		storedToken.scope,
+		storedToken.id,
 	);
 
 	const newRefreshToken = await createRefreshToken(
