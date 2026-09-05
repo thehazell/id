@@ -23,6 +23,7 @@ export const REFRESH_TOKEN_DURATION = 1000 * 60 * 60 * 24 * 30;
  * @param clientId The OAuth client ID.
  * @param userId The ID of the user the token belongs to.
  * @param scope The scopes granted to the token.
+ * @param authorizationCodeId The authorization code that issued the token.
  * @returns The plaintext access token and its expiration time.
  */
 export async function createAccessToken(
@@ -30,6 +31,7 @@ export async function createAccessToken(
 	clientId: string,
 	userId: string,
 	scope: string,
+	authorizationCodeId: string,
 ) {
 	const token = generateToken();
 	const now = Date.now();
@@ -39,10 +41,12 @@ export async function createAccessToken(
 		id: crypto.randomUUID(),
 		clientId,
 		userId,
+		authorizationCodeId,
 		tokenHash: await hashToken(token),
 		scope,
 		expiresAt,
 		createdAt: now,
+		revokedAt: null,
 	});
 
 	return {
@@ -145,7 +149,10 @@ export async function getRefreshToken(db: Database, token: string) {
 		return null;
 	}
 
-	if (refreshToken.expiresAt <= Date.now() || refreshToken.revokedAt !== null) {
+	if (
+		refreshToken.expiresAt <= Date.now() ||
+		refreshToken.revokedAt !== null
+	) {
 		return null;
 	}
 

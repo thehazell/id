@@ -101,6 +101,13 @@ export const oauthAccessTokens = sqliteTable("oauth_access_tokens", {
 	expiresAt: integer("expires_at").notNull(),
 	createdAt: integer("created_at").notNull(),
 	revokedAt: integer("revoked_at"),
+
+	authorizationCodeId: text("authorization_code_id").references(
+		() => oauthAuthorizationCodes.id,
+		{
+			onDelete: "cascade",
+		},
+	),
 });
 
 export const oauthGrants = sqliteTable(
