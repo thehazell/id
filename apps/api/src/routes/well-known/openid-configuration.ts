@@ -30,7 +30,11 @@ discoveryRoute.get("/", (c) => {
 			"profile",
 		],
 		grant_types_supported: ["authorization_code"],
-		token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
+		token_endpoint_auth_methods_supported: [
+			"none",
+			"client_secret_post",
+			"client_secret_post",
+		],
 		code_challenge_methods_supported: ["S256"],
 	});
 });
