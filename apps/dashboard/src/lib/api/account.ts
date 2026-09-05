@@ -50,10 +50,7 @@ export function getOAuthGrants() {
 }
 
 export function revokeOAuthGrant(clientId: string) {
-	return api<{ success: boolean }>(
-		`/api/account/oauth/grants/${clientId}`,
-		{
-			method: "DELETE",
-		},
-	);
+	return api<{ success: boolean }>(`/api/account/oauth/grants/${clientId}`, {
+		method: "DELETE",
+	});
 }
