@@ -21,10 +21,19 @@ authorizeRoute.get("/", async (c) => {
 	const codeChallenge = c.req.query("code_challenge");
 	const codeChallengeMethod = c.req.query("code_challenge_method");
 
+	if (!responseType) {
+		return c.json(
+			{
+				error: "invalid_request",
+				error_description: "The response_type parameter is missing.",
+			},
+			400,
+		);
+	}
+
 	if (
 		!clientId ||
 		!redirectUri ||
-		!responseType ||
 		!scope ||
 		!codeChallenge ||
 		!codeChallengeMethod
@@ -58,6 +67,7 @@ authorizeRoute.get("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
+
 	const client = await getOAuthClient(db, clientId);
 
 	if (!client) {
@@ -96,7 +106,8 @@ authorizeRoute.get("/", async (c) => {
 		return c.json(
 			{
 				error: "invalid_scope",
-				error_description: "One or more requested scopes are not allowed.",
+				error_description:
+					"One or more requested scopes are not allowed.",
 			},
 			400,
 		);
