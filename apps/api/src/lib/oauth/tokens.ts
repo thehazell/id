@@ -31,7 +31,7 @@ export async function createAccessToken(
 	clientId: string,
 	userId: string,
 	scope: string,
-	authorizationCodeId: string,
+	authorizationCodeId?: string,
 ) {
 	const token = generateToken();
 	const now = Date.now();
@@ -41,7 +41,7 @@ export async function createAccessToken(
 		id: crypto.randomUUID(),
 		clientId,
 		userId,
-		authorizationCodeId,
+		authorizationCodeId: authorizationCodeId ?? null,
 		tokenHash: await hashToken(token),
 		scope,
 		expiresAt,
@@ -149,7 +149,10 @@ export async function getRefreshToken(db: Database, token: string) {
 		return null;
 	}
 
-	if (refreshToken.expiresAt <= Date.now() || refreshToken.revokedAt !== null) {
+	if (
+		refreshToken.expiresAt <= Date.now() ||
+		refreshToken.revokedAt !== null
+	) {
 		return null;
 	}
 
