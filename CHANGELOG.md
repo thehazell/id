@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4](https://github.com/thehazell/id/compare/v0.5.3...v0.5.4) (2026-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @simplewebauthn/browser to v14 ([ce276b6](https://github.com/thehazell/id/commit/ce276b62b3b956e17b7cb37382a9a0632a9b80aa))
+
 ## [0.5.3](https://github.com/thehazell/id/compare/v0.5.2...v0.5.3) (2026-09-05)
 
 
