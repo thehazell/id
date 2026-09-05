@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { createDb } from "../../db";
-import { oauthAuthorizationCodes } from "../../db/schema";
+import { oauthAuthorizationCodes, users } from "../../db/schema";
+
 import {
 	getOAuthClient,
 	validateRedirectUri,
@@ -83,6 +84,7 @@ tokenRoute.post("/", async (c) => {
 		}
 
 		const codeHash = await hashToken(code);
+
 		const result = await db
 			.select()
 			.from(oauthAuthorizationCodes)
@@ -159,6 +161,27 @@ tokenRoute.post("/", async (c) => {
 			);
 		}
 
+		const userResult = await db
+			.select({
+				email: users.email,
+				displayName: users.displayName,
+				emailVerifiedAt: users.emailVerifiedAt,
+			})
+			.from(users)
+			.where(eq(users.id, authorizationCode.userId))
+			.limit(1);
+
+		const user = userResult[0];
+
+		if (!user) {
+			return c.json(
+				{
+					error: "invalid_grant",
+				},
+				400,
+			);
+		}
+
 		const accessToken = await createAccessToken(
 			db,
 			client.id,
@@ -173,6 +196,8 @@ tokenRoute.post("/", async (c) => {
 			authorizationCode.scope,
 		);
 
+		const scopes = new Set(authorizationCode.scope.split(" ").filter(Boolean));
+
 		const idToken = await createIdToken({
 			privateKey: c.env.OIDC_PRIVATE_KEY,
 			issuer: c.env.OIDC_ISSUER,
@@ -180,6 +205,16 @@ tokenRoute.post("/", async (c) => {
 			userId: authorizationCode.userId,
 			nonce: authorizationCode.nonce,
 			expiresIn: ACCESS_TOKEN_DURATION / 1000,
+
+			email: scopes.has("email") ? user.email : undefined,
+			emailVerified:
+				scopes.has("email") && user.emailVerifiedAt !== null ? true : undefined,
+
+			displayName: scopes.has("profile") ? user.displayName : undefined,
+
+			preferredUsername: scopes.has("profile")
+				? user.email.split("@")[0]
+				: undefined,
 		});
 
 		return c.json({
