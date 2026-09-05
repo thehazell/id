@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.0](https://github.com/thehazell/id/compare/v0.6.1...v0.7.0) (2026-09-05)
+
+
+### Features
+
+* fix oauth flow ([#60](https://github.com/thehazell/id/issues/60)) ([d0cc658](https://github.com/thehazell/id/commit/d0cc658548fb8bed351eb54cb6c25e4c32d08dfa))
+* list users endpoint ([73d0990](https://github.com/thehazell/id/commit/73d099068bbccc510729bae8bd7137ef85d49d7f))
+* split up api library, move passkey login function to login.tsx ([3463acd](https://github.com/thehazell/id/commit/3463acd4a46314ff4aaa72e8fbc5e2bd37d2563a))
+
 ## [0.6.1](https://github.com/thehazell/id/compare/v0.6.0...v0.6.1) (2026-09-05)
 
 
