@@ -174,9 +174,7 @@ function LoginPage() {
 							type="password"
 							autoComplete="current-password"
 							value={password}
-							onChange={(event) =>
-								setPassword(event.target.value)
-							}
+							onChange={(event) => setPassword(event.target.value)}
 							placeholder="Enter your password"
 							required
 							disabled={submitting || passkeySubmitting}
@@ -187,9 +185,7 @@ function LoginPage() {
 						<input
 							type="checkbox"
 							checked={rememberMe}
-							onChange={(event) =>
-								setRememberMe(event.target.checked)
-							}
+							onChange={(event) => setRememberMe(event.target.checked)}
 							disabled={submitting || passkeySubmitting}
 							className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
 						/>
