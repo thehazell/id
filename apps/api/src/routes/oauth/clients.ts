@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { createDb } from "../../db";
 import {
 	createOAuthClient,
+	deleteOAuthClient,
 	getOAuthClient,
 	getOAuthClients,
 	isOAuthClientType,
@@ -57,7 +58,8 @@ clientsRoute.post("/", requireAdmin, async (c) => {
 
 	if (
 		body.scopes.some(
-			(scope) => !OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
+			(scope) =>
+				!OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
 		)
 	) {
 		return c.json(
@@ -130,7 +132,8 @@ clientsRoute.patch("/:id", requireAdmin, async (c) => {
 
 	if (
 		body.scopes.some(
-			(scope) => !OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
+			(scope) =>
+				!OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
 		)
 	) {
 		return c.json(
@@ -188,6 +191,33 @@ clientsRoute.patch("/:id", requireAdmin, async (c) => {
 		created_at: client?.createdAt,
 		updated_at: client?.updatedAt,
 	});
+});
+
+clientsRoute.delete("/:id", requireAdmin, async (c) => {
+	const clientId = c.req.param("id");
+
+	if (!clientId) {
+		return c.json(
+			{
+				error: "client_not_found",
+			},
+			404,
+		);
+	}
+
+	const db = createDb(c.env.DB);
+	const client = await deleteOAuthClient(db, clientId);
+
+	if (!client) {
+		return c.json(
+			{
+				error: "client_not_found",
+			},
+			404,
+		);
+	}
+
+	return c.body(null, 204);
 });
 
 export default clientsRoute;

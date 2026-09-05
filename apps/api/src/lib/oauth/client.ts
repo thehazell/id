@@ -165,7 +165,9 @@ function parseStringArray(value: string): string[] {
 			return [];
 		}
 
-		return parsed.filter((item): item is string => typeof item === "string");
+		return parsed.filter(
+			(item): item is string => typeof item === "string",
+		);
 	} catch {
 		return [];
 	}
@@ -238,4 +240,23 @@ export async function updateOAuthClient(
 		.where(eq(oauthClients.id, clientId));
 
 	return getOAuthClient(db, clientId);
+}
+
+/**
+ * Deletes an OAuth client.
+ *
+ * @param db The database connection.
+ * @param clientId The OAuth client ID to delete.
+ * @returns The deleted OAuth client, or `null` if it does not exist.
+ */
+export async function deleteOAuthClient(db: Database, clientId: string) {
+	const existing = await getOAuthClient(db, clientId);
+
+	if (!existing) {
+		return null;
+	}
+
+	await db.delete(oauthClients).where(eq(oauthClients.id, clientId));
+
+	return existing;
 }

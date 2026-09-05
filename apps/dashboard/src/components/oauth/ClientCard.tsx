@@ -1,20 +1,36 @@
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-
 import type { OAuthClient } from "@/lib/api";
 
 interface ClientCardProps {
 	client: OAuthClient;
 	onEdit: () => void;
+	onDelete: () => void;
 }
 
-export default function ClientCard({ client, onEdit }: ClientCardProps) {
+export default function ClientCard({
+	client,
+	onEdit,
+	onDelete,
+}: ClientCardProps) {
+	function handleDelete() {
+		if (
+			window.confirm(
+				`Are you sure you want to delete "${client.name}"? This action cannot be undone.`,
+			)
+		) {
+			onDelete();
+		}
+	}
+
 	return (
 		<Card className="p-5">
 			<div className="flex items-start justify-between gap-4">
 				<div className="min-w-0">
 					<div className="flex items-center gap-3">
-						<h2 className="font-medium text-white">{client.name}</h2>
+						<h2 className="font-medium text-white">
+							{client.name}
+						</h2>
 
 						<span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-400">
 							{client.clientType}
@@ -26,9 +42,15 @@ export default function ClientCard({ client, onEdit }: ClientCardProps) {
 					</p>
 				</div>
 
-				<Button variant="secondary" onClick={onEdit}>
-					Edit
-				</Button>
+				<div className="flex shrink-0 gap-2">
+					<Button variant="secondary" onClick={onEdit}>
+						Edit
+					</Button>
+
+					<Button variant="danger" onClick={handleDelete}>
+						Delete
+					</Button>
+				</div>
 			</div>
 
 			<div className="mt-5 grid gap-5 sm:grid-cols-2">
@@ -39,7 +61,10 @@ export default function ClientCard({ client, onEdit }: ClientCardProps) {
 
 					<div className="mt-2 space-y-1">
 						{client.redirectUris.map((uri) => (
-							<p key={uri} className="break-all text-sm text-zinc-400">
+							<p
+								key={uri}
+								className="break-all text-sm text-zinc-400"
+							>
 								{uri}
 							</p>
 						))}
