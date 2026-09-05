@@ -4,7 +4,6 @@ import { useToast } from "@/components/toast/ToastProvider";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
-
 import {
 	createOAuthClient,
 	type OAuthClient,
@@ -36,6 +35,8 @@ export default function ClientModal({
 	const [redirectUris, setRedirectUris] = useState("");
 	const [scopes, setScopes] = useState<string[]>(["openid"]);
 	const [saving, setSaving] = useState(false);
+
+	const [createdClientId, setCreatedClientId] = useState<string | null>(null);
 	const [secret, setSecret] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -47,6 +48,7 @@ export default function ClientModal({
 		setClientType(client?.clientType ?? "confidential");
 		setRedirectUris(client?.redirectUris.join("\n") ?? "");
 		setScopes(client?.scopes ?? ["openid"]);
+		setCreatedClientId(null);
 		setSecret(null);
 	}, [open, client]);
 
@@ -54,6 +56,7 @@ export default function ClientModal({
 		event.preventDefault();
 
 		const normalizedName = name.trim();
+
 		const normalizedRedirectUris = redirectUris
 			.split("\n")
 			.map((uri) => uri.trim())
@@ -80,19 +83,21 @@ export default function ClientModal({
 				});
 
 				toast.success("OAuth client updated.");
-			} else {
-				const response = await createOAuthClient({
-					name: normalizedName,
-					clientType,
-					redirectUris: normalizedRedirectUris,
-					scopes,
-				});
-
-				setSecret(response.client_secret ?? null);
-				toast.success("OAuth client created.");
+				await onSaved();
+				return;
 			}
 
-			await onSaved();
+			const response = await createOAuthClient({
+				name: normalizedName,
+				clientType,
+				redirectUris: normalizedRedirectUris,
+				scopes,
+			});
+
+			setCreatedClientId(response.client_id);
+			setSecret(response.client_secret ?? null);
+
+			toast.success("OAuth client created.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to save OAuth client.",
@@ -117,40 +122,86 @@ export default function ClientModal({
 	return (
 		<Modal
 			open={open}
-			title={editing ? "Edit OAuth client" : "Create OAuth client"}
+			title={
+				createdClientId
+					? "OAuth client created"
+					: editing
+						? "Edit OAuth client"
+						: "Create OAuth client"
+			}
 			description={
-				editing
-					? "Update this application's OAuth configuration."
-					: "Register an application that will use Maze ID for authentication."
+				createdClientId
+					? "Save these credentials now. The client secret will not be shown again."
+					: editing
+						? "Update this application's OAuth configuration."
+						: "Register an application that will use Maze ID for authentication."
 			}
 			onClose={onClose}
 		>
-			{secret ? (
+			{createdClientId ? (
 				<div className="space-y-5">
 					<div className="rounded-md border border-amber-900/50 bg-amber-950/20 p-4">
-						<p className="text-sm font-medium text-amber-300">Client secret</p>
-
-						<p className="mt-2 text-xs text-amber-200/70">
-							Copy this secret now. Maze ID will not show it again.
+						<p className="text-sm font-medium text-amber-300">
+							Save your client credentials
 						</p>
 
-						<div className="mt-3 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
-							{secret}
+						<p className="mt-2 text-xs text-amber-200/70">
+							Save these credentials now. The client secret will not be shown
+							again.
+						</p>
+
+						<div className="mt-4">
+							<p className="text-xs font-medium text-amber-300">Client ID</p>
+
+							<div className="mt-2 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
+								{createdClientId}
+							</div>
+
+							<Button
+								type="button"
+								variant="secondary"
+								className="mt-3 w-full"
+								onClick={() => {
+									void navigator.clipboard.writeText(createdClientId);
+									toast.success("Client ID copied.");
+								}}
+							>
+								Copy client ID
+							</Button>
 						</div>
 
-						<Button
-							variant="secondary"
-							className="mt-3 w-full"
-							onClick={() => {
-								void navigator.clipboard.writeText(secret);
-								toast.success("Client secret copied.");
-							}}
-						>
-							Copy secret
-						</Button>
+						{secret && (
+							<div className="mt-4">
+								<p className="text-xs font-medium text-amber-300">
+									Client secret
+								</p>
+
+								<div className="mt-2 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
+									{secret}
+								</div>
+
+								<Button
+									type="button"
+									variant="secondary"
+									className="mt-3 w-full"
+									onClick={() => {
+										void navigator.clipboard.writeText(secret);
+										toast.success("Client secret copied.");
+									}}
+								>
+									Copy client secret
+								</Button>
+							</div>
+						)}
 					</div>
 
-					<Button className="w-full" onClick={onClose}>
+					<Button
+						type="button"
+						className="w-full"
+						onClick={() => {
+							void onSaved();
+						}}
+					>
 						Done
 					</Button>
 				</div>
