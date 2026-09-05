@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Fingerprint } from "lucide-react";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/toast/ToastProvider";
@@ -8,8 +9,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
 import PreAuthLayout from "@/layouts/PreAuthLayout";
-import { login } from "@/lib/api";
-import { loginWithPasskey } from "@/lib/auth/passkey";
+import { login, verifyPasskeyLogin, getPasskeyLoginOptions } from "@/lib/api";
 
 export interface LoginSearch {
 	return_to?: string;
@@ -29,6 +29,16 @@ function getSafeReturnTo(value: string | undefined) {
 	}
 
 	return value;
+}
+
+async function loginWithPasskey() {
+	const { challengeId, ...options } = await getPasskeyLoginOptions();
+
+	const response = await startAuthentication({
+		optionsJSON: options,
+	});
+
+	await verifyPasskeyLogin(response, challengeId);
 }
 
 function LoginPage() {
