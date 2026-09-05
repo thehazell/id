@@ -42,8 +42,8 @@ export const oauthAuthorizationCodes = sqliteTable(
 
 		nonce: text("nonce"),
 
-		codeChallenge: text("code_challenge").notNull(),
-		codeChallengeMethod: text("code_challenge_method").notNull(),
+		codeChallenge: text("code_challenge"),
+		codeChallengeMethod: text("code_challenge_method"),
 
 		expiresAt: integer("expires_at").notNull(),
 		createdAt: integer("created_at").notNull(),

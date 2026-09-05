@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-
 import { Hono } from "hono";
+import type { Context } from "hono";
 
 import { createDb } from "../../db";
 import { users } from "../../db/schema";
@@ -10,19 +10,39 @@ const userinfoRoute = new Hono<{
 	Bindings: Env;
 }>();
 
-userinfoRoute.get("/", async (c) => {
+async function userinfo(c: Context<{ Bindings: Env }>) {
 	const authorization = c.req.header("Authorization");
 
-	if (!authorization?.startsWith("Bearer ")) {
-		return c.json(
-			{
-				error: "invalid_token",
-			},
-			401,
-		);
-	}
+	let token: string | undefined;
 
-	const token = authorization.slice(7);
+	if (authorization) {
+		const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+		if (!match) {
+			return c.json(
+				{
+					error: "invalid_token",
+				},
+				401,
+			);
+		}
+
+		token = match[1];
+	} else if (c.req.method === "POST") {
+		const contentType = c.req.header("Content-Type") ?? "";
+
+		if (
+			contentType
+				.toLowerCase()
+				.startsWith("application/x-www-form-urlencoded")
+		) {
+			const body = await c.req.parseBody();
+
+			if (typeof body.access_token === "string") {
+				token = body.access_token;
+			}
+		}
+	}
 
 	if (!token) {
 		return c.json(
@@ -34,6 +54,7 @@ userinfoRoute.get("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
+
 	const accessToken = await getAccessToken(db, token);
 
 	if (!accessToken) {
@@ -46,7 +67,13 @@ userinfoRoute.get("/", async (c) => {
 	}
 
 	const result = await db
-		.select()
+		.select({
+			id: users.id,
+			email: users.email,
+			displayName: users.displayName,
+			emailVerifiedAt: users.emailVerifiedAt,
+			profileImageKey: users.profileImageKey,
+		})
 		.from(users)
 		.where(eq(users.id, accessToken.userId))
 		.limit(1);
@@ -62,30 +89,34 @@ userinfoRoute.get("/", async (c) => {
 		);
 	}
 
-	const scopes = JSON.parse(accessToken.scope) as string[];
+	const scopes = new Set(accessToken.scope.split(" ").filter(Boolean));
 
 	const claims: Record<string, unknown> = {
 		sub: user.id,
 	};
 
-	if (scopes.includes("profile")) {
-		if (user.displayName) {
-			claims.name = user.displayName;
-		}
+	if (scopes.has("profile")) {
+		claims.name = user.displayName ?? undefined;
+		claims.preferred_username = user.email.split("@")[0];
 
 		if (user.profileImageKey) {
 			const origin = new URL(c.req.url).origin;
 
-			claims.picture = `${origin}/oauth/avatar/${encodeURIComponent(user.id)}`;
+			claims.picture = `${origin}/oauth/avatar/${encodeURIComponent(
+				user.id,
+			)}`;
 		}
 	}
 
-	if (scopes.includes("email")) {
+	if (scopes.has("email")) {
 		claims.email = user.email;
 		claims.email_verified = user.emailVerifiedAt !== null;
 	}
 
-	return c.json(claims);
-});
+	return c.json(claims, 200);
+}
+
+userinfoRoute.get("/", userinfo);
+userinfoRoute.post("/", userinfo);
 
 export default userinfoRoute;
