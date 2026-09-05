@@ -124,8 +124,7 @@ authorize.get("/", async (c) => {
 			requestClaims.max_age !== undefined
 				? String(requestClaims.max_age)
 				: queryMaxAge;
-		const codeChallenge =
-			requestClaims.code_challenge ?? queryCodeChallenge;
+		const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
 		const codeChallengeMethod =
 			requestClaims.code_challenge_method ?? queryCodeChallengeMethod;
 
@@ -133,8 +132,7 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"client_id, redirect_uri, and scope are required.",
+					error_description: "client_id, redirect_uri, and scope are required.",
 				},
 				400,
 			);
@@ -144,8 +142,7 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "invalid_request",
-					error_description:
-						"The response_type parameter is required.",
+					error_description: "The response_type parameter is required.",
 				},
 				400,
 			);
@@ -162,8 +159,7 @@ authorize.get("/", async (c) => {
 			return c.json(
 				{
 					error: "unsupported_response_type",
-					error_description:
-						"Only the code response type is supported.",
+					error_description: "Only the code response type is supported.",
 				},
 				400,
 			);
@@ -251,9 +247,7 @@ authorize.get("/", async (c) => {
 		}
 
 		const sessionToken = getCookie(c, "session");
-		const session = sessionToken
-			? await getSession(db, sessionToken)
-			: null;
+		const session = sessionToken ? await getSession(db, sessionToken) : null;
 
 		/*
 		 * `session.createdAt` represents the time of the most recent
@@ -263,8 +257,7 @@ authorize.get("/", async (c) => {
 		 * relying on the dashboard to enforce `max_age`.
 		 */
 		const authenticationAge = session
-			? Math.floor(Date.now() / 1000) -
-				Math.floor(session.createdAt / 1000)
+			? Math.floor(Date.now() / 1000) - Math.floor(session.createdAt / 1000)
 			: null;
 
 		const maxAgeExpired =
