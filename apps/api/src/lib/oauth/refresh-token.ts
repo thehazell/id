@@ -40,6 +40,7 @@ export async function exchangeRefreshToken(
 	}
 
 	const db = createDb(c.env.DB);
+
 	const client = await getOAuthClient(db, clientId);
 
 	if (!client) {
@@ -89,7 +90,6 @@ export async function exchangeRefreshToken(
 		client.id,
 		storedToken.userId,
 		storedToken.scope,
-		storedToken.id,
 	);
 
 	const newRefreshToken = await createRefreshToken(

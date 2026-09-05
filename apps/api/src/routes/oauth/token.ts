@@ -6,6 +6,13 @@ import { unsupportedGrantType } from "../../lib/oauth/responses";
 
 const tokenRoute = new Hono<{ Bindings: Env }>();
 
+tokenRoute.use("*", async (c, next) => {
+	c.header("Cache-Control", "no-store");
+	c.header("Pragma", "no-cache");
+
+	await next();
+});
+
 tokenRoute.post("/", async (c) => {
 	const body = await c.req.parseBody();
 
