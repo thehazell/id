@@ -145,10 +145,7 @@ export async function getRefreshToken(db: Database, token: string) {
 		return null;
 	}
 
-	if (
-		refreshToken.expiresAt <= Date.now() ||
-		refreshToken.revokedAt !== null
-	) {
+	if (refreshToken.expiresAt <= Date.now() || refreshToken.revokedAt !== null) {
 		return null;
 	}
 

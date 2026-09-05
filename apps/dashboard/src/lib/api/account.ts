@@ -7,10 +7,25 @@ export function changePassword(currentPassword: string, newPassword: string) {
 	});
 }
 
-export function updateProfile(displayName: string) {
+export interface UpdateProfileInput {
+	displayName?: string;
+	givenName?: string;
+	familyName?: string;
+	middleName?: string;
+	nickname?: string;
+	preferredUsername?: string;
+	profileUrl?: string;
+	website?: string;
+	gender?: string;
+	birthdate?: string;
+	zoneinfo?: string;
+	locale?: string;
+}
+
+export function updateProfile(profile: UpdateProfileInput) {
 	return api<{ success: boolean }>("/api/account/profile", {
 		method: "PATCH",
-		body: JSON.stringify({ displayName }),
+		body: JSON.stringify(profile),
 	});
 }
 
