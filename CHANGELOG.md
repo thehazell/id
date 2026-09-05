@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/thehazell/id/compare/v0.7.0...v0.8.0) (2026-09-05)
+
+
+### Features
+
+* remember oauth auth choice ([#61](https://github.com/thehazell/id/issues/61)) ([5433360](https://github.com/thehazell/id/commit/543336090fb71deeba4e1e2e801155010d0a3d3b))
+
 ## [0.7.0](https://github.com/thehazell/id/compare/v0.6.1...v0.7.0) (2026-09-05)
 
 
