@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/thehazell/id/compare/v0.5.4...v0.6.0) (2026-09-05)
+
+
+### Features
+
+* delete clients endpoint and ui ([ef3bf8b](https://github.com/thehazell/id/commit/ef3bf8b7c742094748f4ecd7626522f7ccd3bee5))
+
 ## [0.5.4](https://github.com/thehazell/id/compare/v0.5.3...v0.5.4) (2026-09-05)
 
 
