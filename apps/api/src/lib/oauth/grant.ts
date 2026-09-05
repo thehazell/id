@@ -7,6 +7,76 @@ import {
 	oauthRefreshTokens,
 } from "../../db/schema";
 
+function parseGrantScopes(scopes: string): string[] {
+	try {
+		const parsed: unknown = JSON.parse(scopes);
+
+		if (!Array.isArray(parsed)) {
+			return [];
+		}
+
+		return parsed.filter(
+			(scope): scope is string => typeof scope === "string",
+		);
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Gets the OAuth grant for a user and client.
+ *
+ * Revoked grants are returned as well so callers can distinguish
+ * between an active grant and a revoked one.
+ *
+ * @param db The database connection.
+ * @param userId The ID of the user.
+ * @param clientId The OAuth client ID.
+ */
+export async function getOAuthGrant(
+	db: Database,
+	userId: string,
+	clientId: string,
+) {
+	const result = await db
+		.select()
+		.from(oauthGrants)
+		.where(
+			and(
+				eq(oauthGrants.userId, userId),
+				eq(oauthGrants.clientId, clientId),
+			),
+		)
+		.limit(1);
+
+	return result[0] ?? null;
+}
+
+/**
+ * Checks whether an active OAuth grant contains all requested scopes.
+ *
+ * @param db The database connection.
+ * @param userId The ID of the user.
+ * @param clientId The OAuth client ID.
+ * @param scopes The requested scopes.
+ */
+export async function hasOAuthGrant(
+	db: Database,
+	userId: string,
+	clientId: string,
+	scopes: string[],
+) {
+	const grant = await getOAuthGrant(db, userId, clientId);
+
+	if (!grant || grant.revokedAt !== null) {
+		return false;
+	}
+
+	const grantedScopes = new Set(parseGrantScopes(grant.scopes));
+
+	return scopes.every((scope) => grantedScopes.has(scope));
+}
+
 /**
  * Grants OAuth access to a client for a user.
  *
@@ -37,10 +107,13 @@ export async function grantOAuthAccess(
 		.limit(1);
 
 	if (existing[0]) {
+		const existingScopes = parseGrantScopes(existing[0].scopes);
+		const scopes = [...new Set([...existingScopes, ...input.scopes])];
+
 		await db
 			.update(oauthGrants)
 			.set({
-				scopes: JSON.stringify(input.scopes),
+				scopes: JSON.stringify(scopes),
 				grantedAt: now,
 				revokedAt: null,
 			})

@@ -9,6 +9,7 @@ import userinfo from "./userinfo";
 import approve from "./approve";
 import avatar from "./avatar";
 import details from "./details";
+import grant from "./grant";
 
 const oauthRoute = new Hono<{
 	Bindings: Env;
@@ -23,4 +24,5 @@ oauthRoute.route("/userinfo", userinfo);
 oauthRoute.route("/approve", approve);
 oauthRoute.route("/avatar", avatar);
 oauthRoute.route("/details", details);
+oauthRoute.route("/grant", grant);
 export default oauthRoute;
