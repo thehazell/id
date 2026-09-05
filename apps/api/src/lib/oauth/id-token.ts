@@ -1,5 +1,4 @@
 import { getKeyId, importPrivateKey, sign } from "./keys";
-
 import { base64UrlEncode } from "../base64";
 
 const encoder = new TextEncoder();
@@ -14,6 +13,7 @@ interface CreateIdTokenInput {
 	clientId: string;
 	expiresIn: number;
 	nonce?: string;
+	authTime?: number;
 	privateKey: string;
 }
 
@@ -38,15 +38,17 @@ export async function createIdToken(input: CreateIdTokenInput) {
 		payload.nonce = input.nonce;
 	}
 
+	if (input.authTime !== undefined) {
+		payload.auth_time = input.authTime;
+	}
+
 	const encodedHeader = encodeJson(header);
 	const encodedPayload = encodeJson(payload);
 
 	const signingInput = encoder.encode(`${encodedHeader}.${encodedPayload}`);
 
 	const privateKey = await importPrivateKey(input.privateKey);
-
 	const signature = await sign(privateKey, signingInput);
-
 	const encodedSignature = base64UrlEncode(new Uint8Array(signature));
 
 	return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;

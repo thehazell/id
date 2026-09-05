@@ -22,6 +22,7 @@ grant.get("/", requireAuth, async (c) => {
 
 	const db = createDb(c.env.DB);
 	const user = c.get("user");
+	const session = c.get("session");
 
 	const client = await getOAuthClient(db, clientId);
 
@@ -40,6 +41,7 @@ grant.get("/", requireAuth, async (c) => {
 
 	return c.json({
 		granted,
+		auth_time: Math.floor(session.createdAt / 1000),
 	});
 });
 

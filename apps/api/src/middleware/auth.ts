@@ -2,14 +2,22 @@ import { getCookie } from "hono/cookie";
 import type { Context, Next } from "hono";
 
 import { createDb } from "../db";
-import { getAdminUser, getSessionUser } from "../lib/session";
+import { getSessionUserWithSession } from "../lib/session";
 
-export type AuthUser = NonNullable<Awaited<ReturnType<typeof getSessionUser>>>;
+export type AuthUser = NonNullable<
+	Awaited<ReturnType<typeof getSessionUserWithSession>>
+>["user"];
+
+export type AuthSession = NonNullable<
+	Awaited<ReturnType<typeof getSessionUserWithSession>>
+>["session"];
 
 export type AppEnv = {
 	Bindings: Env;
+
 	Variables: {
 		user: AuthUser;
+		session: AuthSession;
 	};
 };
 
@@ -27,9 +35,9 @@ export async function requireAuth(c: Context<AppEnv>, next: Next) {
 
 	const db = createDb(c.env.DB);
 
-	const user = await getSessionUser(db, sessionToken);
+	const record = await getSessionUserWithSession(db, sessionToken);
 
-	if (!user) {
+	if (!record) {
 		return c.json(
 			{
 				error: "unauthorized",
@@ -38,7 +46,8 @@ export async function requireAuth(c: Context<AppEnv>, next: Next) {
 		);
 	}
 
-	c.set("user", user);
+	c.set("user", record.user);
+	c.set("session", record.session);
 
 	await next();
 }
@@ -57,9 +66,9 @@ export async function requireAdmin(c: Context<AppEnv>, next: Next) {
 
 	const db = createDb(c.env.DB);
 
-	const user = await getAdminUser(db, sessionToken);
+	const record = await getSessionUserWithSession(db, sessionToken);
 
-	if (!user) {
+	if (!record?.user.isAdmin) {
 		return c.json(
 			{
 				error: "forbidden",
@@ -68,7 +77,8 @@ export async function requireAdmin(c: Context<AppEnv>, next: Next) {
 		);
 	}
 
-	c.set("user", user);
+	c.set("user", record.user);
+	c.set("session", record.session);
 
 	await next();
 }

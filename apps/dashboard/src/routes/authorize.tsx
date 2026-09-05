@@ -14,6 +14,7 @@ export interface AuthorizeSearch {
 	code_challenge_method?: string;
 	nonce?: string;
 	prompt?: string;
+	max_age?: string;
 }
 
 interface OAuthClientDetails {
@@ -30,7 +31,9 @@ export const Route = createFileRoute("/authorize")({
 		client_id:
 			typeof search.client_id === "string" ? search.client_id : undefined,
 		redirect_uri:
-			typeof search.redirect_uri === "string" ? search.redirect_uri : undefined,
+			typeof search.redirect_uri === "string"
+				? search.redirect_uri
+				: undefined,
 		response_type:
 			typeof search.response_type === "string"
 				? search.response_type
@@ -47,6 +50,8 @@ export const Route = createFileRoute("/authorize")({
 				: undefined,
 		nonce: typeof search.nonce === "string" ? search.nonce : undefined,
 		prompt: typeof search.prompt === "string" ? search.prompt : undefined,
+		max_age:
+			typeof search.max_age === "string" ? search.max_age : undefined,
 	}),
 	component: AuthorizePage,
 });
@@ -215,19 +220,22 @@ function AuthorizePage() {
 		setError(null);
 
 		try {
-			const response = await api<{ redirect_uri: string }>("/oauth/approve", {
-				method: "POST",
-				body: JSON.stringify({
-					client_id: search.client_id,
-					redirect_uri: search.redirect_uri,
-					response_type: search.response_type,
-					scope: search.scope,
-					state: search.state,
-					code_challenge: search.code_challenge,
-					code_challenge_method: search.code_challenge_method,
-					nonce: search.nonce,
-				}),
-			});
+			const response = await api<{ redirect_uri: string }>(
+				"/oauth/approve",
+				{
+					method: "POST",
+					body: JSON.stringify({
+						client_id: search.client_id,
+						redirect_uri: search.redirect_uri,
+						response_type: search.response_type,
+						scope: search.scope,
+						state: search.state,
+						code_challenge: search.code_challenge,
+						code_challenge_method: search.code_challenge_method,
+						nonce: search.nonce,
+					}),
+				},
+			);
 
 			window.location.href = response.redirect_uri;
 		} catch (error) {
@@ -303,7 +311,8 @@ function AuthorizePage() {
 					</h1>
 
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						The authorization request is missing required parameters.
+						The authorization request is missing required
+						parameters.
 					</p>
 				</div>
 			</div>
@@ -313,7 +322,9 @@ function AuthorizePage() {
 	if (isSilent) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-				<div className="text-sm text-zinc-500">Checking authentication...</div>
+				<div className="text-sm text-zinc-500">
+					Checking authentication...
+				</div>
 			</div>
 		);
 	}
@@ -341,8 +352,8 @@ function AuthorizePage() {
 					</h1>
 
 					<p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
-						Review the permissions requested by this application before
-						continuing.
+						Review the permissions requested by this application
+						before continuing.
 					</p>
 				</div>
 
@@ -373,8 +384,8 @@ function AuthorizePage() {
 						</p>
 
 						<p className="mt-1 text-sm text-zinc-500">
-							This application is requesting access to the following
-							permissions.
+							This application is requesting access to the
+							following permissions.
 						</p>
 
 						<div className="mt-4 space-y-2">
