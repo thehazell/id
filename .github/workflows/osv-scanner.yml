@@ -1,0 +1,42 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: OSV-Scanner
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  merge_group:
+    branches: ["main"]
+  schedule:
+    - cron: "16 13 * * 6"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  scan-scheduled:
+    name: Scan dependencies
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@baa4139e56d6312335d899e6ba045fa16d1d3d0b # v2.5.1
+    with:
+      scan-args: |-
+        -r
+        --skip-git
+        ./
+
+  scan-pr:
+    name: Scan PR dependencies
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@baa4139e56d6312335d899e6ba045fa16d1d3d0b # v2.5.1
+    with:
+      scan-args: |-
+        -r
+        --skip-git
+        ./
