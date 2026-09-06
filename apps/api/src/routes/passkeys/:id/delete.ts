@@ -9,67 +9,65 @@ import { getSessionUser } from "@/lib/session";
 const route = new Hono<{ Bindings: Env }>();
 
 route.delete("/", async (c) => {
-    const token = getCookie(c, "session");
+	const token = getCookie(c, "session");
 
-    if (!token) {
-        return c.json(
-            {
-                error: "Unauthorized",
-            },
-            401,
-        );
-    }
+	if (!token) {
+		return c.json(
+			{
+				error: "Unauthorized",
+			},
+			401,
+		);
+	}
 
-    const db = createDb(c.env.DB);
-    const user = await getSessionUser(db, token);
+	const db = createDb(c.env.DB);
+	const user = await getSessionUser(db, token);
 
-    if (!user) {
-        return c.json(
-            {
-                error: "Unauthorized",
-            },
-            401,
-        );
-    }
+	if (!user) {
+		return c.json(
+			{
+				error: "Unauthorized",
+			},
+			401,
+		);
+	}
 
-    const passkeyId = c.req.param("id");
+	const passkeyId = c.req.param("id");
 
-    if (!passkeyId) {
-        return c.json(
-            {
-                error: "Passkey not found.",
-            },
-            404,
-        );
-    }
+	if (!passkeyId) {
+		return c.json(
+			{
+				error: "Passkey not found.",
+			},
+			404,
+		);
+	}
 
-    const result = await db
-        .select({
-            id: passkeys.id,
-            userId: passkeys.userId,
-        })
-        .from(passkeys)
-        .where(eq(passkeys.id, passkeyId))
-        .limit(1);
+	const result = await db
+		.select({
+			id: passkeys.id,
+			userId: passkeys.userId,
+		})
+		.from(passkeys)
+		.where(eq(passkeys.id, passkeyId))
+		.limit(1);
 
-    const passkey = result[0];
+	const passkey = result[0];
 
-    if (!passkey || passkey.userId !== user.id) {
-        return c.json(
-            {
-                error: "Passkey not found.",
-            },
-            404,
-        );
-    }
+	if (!passkey || passkey.userId !== user.id) {
+		return c.json(
+			{
+				error: "Passkey not found.",
+			},
+			404,
+		);
+	}
 
-    await db
-        .delete(passkeys)
-        .where(eq(passkeys.id, passkeyId));
+	await db.delete(passkeys).where(eq(passkeys.id, passkeyId));
 
-    return c.json({
-        success: true,
-    });
+	return c.json({
+		success: true,
+	});
 });
 
 export default route;
