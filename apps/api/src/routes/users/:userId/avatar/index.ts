@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 
-import postRoute from "./post";
 import getRoute from "./get";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.route("/", postRoute);
 route.route("/", getRoute);
 
 export default route;

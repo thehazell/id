@@ -31,6 +31,7 @@ export function updateProfile(profile: UpdateProfileInput) {
 
 export function uploadProfileAvatar(file: File) {
 	const formData = new FormData();
+
 	formData.append("file", file);
 
 	return api<{ success: boolean }>("/api/account/profile/avatar", {

@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, API_URL } from "./client";
 
 export function bootstrapAdmin(secret: string) {
 	return api<{ success: boolean }>("/api/admin/bootstrap", {
@@ -41,4 +41,8 @@ export interface UsersResponse {
 
 export function getUsers(): Promise<UsersResponse> {
 	return api<UsersResponse>("/api/admin/users");
+}
+
+export function getUserAvatarUrl(userId: string): string {
+	return `${API_URL}/api/users/${userId}/avatar`;
 }
