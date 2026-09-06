@@ -19,7 +19,7 @@ export const Api = Cloudflare.Worker("Api", {
 	workersDev: false,
 
 	compatibility: {
-		date: "2026-08-31",
+		date: "2026-07-11",
 	},
 
 	env: {
