@@ -36,7 +36,6 @@ discoveryRoute.get("/", (c) => {
 			"auth_time",
 			"nonce",
 			"acr",
-
 			"name",
 			"given_name",
 			"family_name",
@@ -51,7 +50,6 @@ discoveryRoute.get("/", (c) => {
 			"zoneinfo",
 			"locale",
 			"updated_at",
-
 			"email",
 			"email_verified",
 		],
@@ -65,6 +63,7 @@ discoveryRoute.get("/", (c) => {
 		code_challenge_methods_supported: ["S256"],
 
 		request_parameter_supported: true,
+		claims_parameter_supported: true,
 
 		request_object_signing_alg_values_supported: ["none"],
 	});

@@ -3,12 +3,130 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 
 import { createDb } from "../../db";
-import { users } from "../../db/schema";
+import { oauthAuthorizationCodes, users } from "../../db/schema";
 import { getAccessToken } from "../../lib/oauth/tokens";
 
 const userinfoRoute = new Hono<{
 	Bindings: Env;
 }>();
+
+type UserInfoContext = {
+	user: {
+		id: string;
+		email: string;
+		displayName: string | null;
+		givenName: string | null;
+		familyName: string | null;
+		middleName: string | null;
+		nickname: string | null;
+		preferredUsername: string | null;
+		profileUrl: string | null;
+		profileImageKey: string | null;
+		website: string | null;
+		gender: string | null;
+		birthdate: string | null;
+		zoneinfo: string | null;
+		locale: string | null;
+		emailVerifiedAt: number | null;
+		updatedAt: number;
+	};
+	origin: string;
+};
+
+type UserInfoClaimDefinition = {
+	scope?: string;
+	get: (context: UserInfoContext) => unknown;
+};
+
+function getUserInfoClaimDefinitions(): Record<
+	string,
+	UserInfoClaimDefinition
+> {
+	return {
+		name: {
+			scope: "profile",
+			get: ({ user }) => user.displayName,
+		},
+
+		given_name: {
+			scope: "profile",
+			get: ({ user }) => user.givenName,
+		},
+
+		family_name: {
+			scope: "profile",
+			get: ({ user }) => user.familyName,
+		},
+
+		middle_name: {
+			scope: "profile",
+			get: ({ user }) => user.middleName,
+		},
+
+		nickname: {
+			scope: "profile",
+			get: ({ user }) => user.nickname,
+		},
+
+		preferred_username: {
+			scope: "profile",
+			get: ({ user }) => user.preferredUsername,
+		},
+
+		profile: {
+			scope: "profile",
+			get: ({ user }) => user.profileUrl,
+		},
+
+		picture: {
+			scope: "profile",
+			get: ({ user, origin }) =>
+				user.profileImageKey
+					? `${origin}/oauth/avatar/${encodeURIComponent(user.id)}`
+					: null,
+		},
+
+		website: {
+			scope: "profile",
+			get: ({ user }) => user.website,
+		},
+
+		gender: {
+			scope: "profile",
+			get: ({ user }) => user.gender,
+		},
+
+		birthdate: {
+			scope: "profile",
+			get: ({ user }) => user.birthdate,
+		},
+
+		zoneinfo: {
+			scope: "profile",
+			get: ({ user }) => user.zoneinfo,
+		},
+
+		locale: {
+			scope: "profile",
+			get: ({ user }) => user.locale,
+		},
+
+		updated_at: {
+			scope: "profile",
+			get: ({ user }) => Math.floor(user.updatedAt / 1000),
+		},
+
+		email: {
+			scope: "email",
+			get: ({ user }) => user.email,
+		},
+
+		email_verified: {
+			scope: "email",
+			get: ({ user }) => user.emailVerifiedAt !== null,
+		},
+	};
+}
 
 async function userinfo(c: Context<{ Bindings: Env }>) {
 	const authorization = c.req.header("Authorization");
@@ -103,78 +221,69 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 
 	const scopes = new Set(accessToken.scope.split(" ").filter(Boolean));
 
+	const requestedUserInfoClaims = new Set<string>();
+
+	if (accessToken.authorizationCodeId) {
+		const result = await db
+			.select({
+				claims: oauthAuthorizationCodes.claims,
+			})
+			.from(oauthAuthorizationCodes)
+			.where(
+				eq(oauthAuthorizationCodes.id, accessToken.authorizationCodeId),
+			)
+			.limit(1);
+
+		const requestedClaims = result[0]?.claims;
+
+		if (requestedClaims) {
+			try {
+				const parsed = JSON.parse(requestedClaims) as {
+					userinfo?: Record<string, unknown>;
+				};
+
+				for (const claim of Object.keys(parsed.userinfo ?? {})) {
+					requestedUserInfoClaims.add(claim);
+				}
+			} catch {
+				// Ignore malformed claims.
+			}
+		}
+	}
+
+	const context: UserInfoContext = {
+		user,
+		origin: new URL(c.req.url).origin,
+	};
+
+	const definitions = getUserInfoClaimDefinitions();
+
 	const claims: Record<string, unknown> = {
 		sub: user.id,
 	};
 
-	if (scopes.has("profile")) {
-		if (user.displayName) {
-			claims.name = user.displayName;
+	for (const [claimName, definition] of Object.entries(definitions)) {
+		const hasScope = definition.scope
+			? scopes.has(definition.scope)
+			: false;
+
+		const explicitlyRequested = requestedUserInfoClaims.has(claimName);
+
+		if (!hasScope && !explicitlyRequested) {
+			continue;
 		}
 
-		if (user.givenName) {
-			claims.given_name = user.givenName;
+		const value = definition.get(context);
+
+		if (value !== null && value !== undefined) {
+			claims[claimName] = value;
 		}
-
-		if (user.familyName) {
-			claims.family_name = user.familyName;
-		}
-
-		if (user.middleName) {
-			claims.middle_name = user.middleName;
-		}
-
-		if (user.nickname) {
-			claims.nickname = user.nickname;
-		}
-
-		if (user.preferredUsername) {
-			claims.preferred_username = user.preferredUsername;
-		}
-
-		if (user.profileUrl) {
-			claims.profile = user.profileUrl;
-		}
-
-		if (user.profileImageKey) {
-			const origin = new URL(c.req.url).origin;
-
-			claims.picture = `${origin}/oauth/avatar/${encodeURIComponent(user.id)}`;
-		}
-
-		if (user.website) {
-			claims.website = user.website;
-		}
-
-		if (user.gender) {
-			claims.gender = user.gender;
-		}
-
-		if (user.birthdate) {
-			claims.birthdate = user.birthdate;
-		}
-
-		if (user.zoneinfo) {
-			claims.zoneinfo = user.zoneinfo;
-		}
-
-		if (user.locale) {
-			claims.locale = user.locale;
-		}
-
-		claims.updated_at = Math.floor(user.updatedAt / 1000);
-	}
-
-	if (scopes.has("email")) {
-		claims.email = user.email;
-		claims.email_verified = user.emailVerifiedAt !== null;
 	}
 
 	return c.json(claims);
 }
 
 userinfoRoute.get("/", userinfo);
-
 userinfoRoute.post("/", userinfo);
 
 export default userinfoRoute;
