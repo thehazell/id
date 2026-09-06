@@ -142,7 +142,7 @@ function Avatar({ user }: { user: AdminUser }) {
 
 	return (
 		<img
-			src={getUserAvatarUrl(user.id)}
+			src={`${getUserAvatarUrl(user.id)}?v=${encodeURIComponent(user.profileImageKey)}`}
 			alt=""
 			className="size-10 shrink-0 rounded-full object-cover"
 			onError={() => setFailed(true)}
