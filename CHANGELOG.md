@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.9.0](https://github.com/thehazell/id/compare/v0.8.0...v0.9.0) (2026-09-05)
+
+
+### Features
+
+* auth time in id token ([2a09950](https://github.com/thehazell/id/commit/2a09950391b033566812f49654b16a808373f915))
+* cache control, discovery document update, more ([92aabbd](https://github.com/thehazell/id/commit/92aabbdff33e839d49cb874582dae3343e84a8d6))
+* client secret basic advertised support ([59c0a9a](https://github.com/thehazell/id/commit/59c0a9a0df1f5f0068e8f53640273470e4c0ae0f))
+* full profile scope support migration ([16a1868](https://github.com/thehazell/id/commit/16a18680eb081fc1144a0f137b3ca9b4821ddfe6))
+* include info in id token based on scope ([#63](https://github.com/thehazell/id/issues/63)) ([d9b3219](https://github.com/thehazell/id/commit/d9b3219edc24c387e27887d5016fddc4ca8b22cf))
+* lots of compliance change, new lib ([195bc14](https://github.com/thehazell/id/commit/195bc1481b77bd7a077ecd0524b411a44a4db41e))
+* more compliance changes, this implementation passes basic compliance checks ([1a73b62](https://github.com/thehazell/id/commit/1a73b62e233946d3e83624699f38d68ac4545e15))
+* support client secret basic ([ca1d358](https://github.com/thehazell/id/commit/ca1d3584c85ea4cb4d3428e9586ca84b57e45212))
+* support max age ([1ea09d0](https://github.com/thehazell/id/commit/1ea09d0878609962b88f4eacf79420aa7f00c8a0))
+* support post  auth, fix redirect bug ([90ec954](https://github.com/thehazell/id/commit/90ec954a0671d3a0c3a0bc89ae75ea51ab812631))
+* support prompts ([106b3f7](https://github.com/thehazell/id/commit/106b3f721dfe265b36fa161bf310f24eb2336cc1))
+* suppport acr values ([2839110](https://github.com/thehazell/id/commit/2839110bddea09ee2e8180c81f3444e63ed5257f))
+
+
+### Bug Fixes
+
+* actually store auth time ([0f6b7d3](https://github.com/thehazell/id/commit/0f6b7d311506f22d60f2c46280845e25e8fa3545))
+* add acr claim ([644015c](https://github.com/thehazell/id/commit/644015ce36a4791a867043b8ac345c8aa22a476f))
+* advertise none supported request signing alg ([22d1dd2](https://github.com/thehazell/id/commit/22d1dd2ed6bff88943a81cec92e6260ae5b64421))
+* fix typo in openid config ([888be72](https://github.com/thehazell/id/commit/888be7211f077cb2fc06fdcb8bc717b6d770c668))
+* **oauth:** revoke access tokens when authorization codes are reused ([ab310ba](https://github.com/thehazell/id/commit/ab310ba18e5149ad81f7137a87828703ad867f66))
+* provide authorization code ID ([f2ee8c3](https://github.com/thehazell/id/commit/f2ee8c37cbf8e837cc17c5be9d313c1f8bb28f5d))
+* provide storedToken.id to createAccessToken ([c1866a4](https://github.com/thehazell/id/commit/c1866a414f6525ce633815b854e37f013e9c8df4))
+* return proper error if response code is missing ([32b02d5](https://github.com/thehazell/id/commit/32b02d565fb85edab30886f8f44ba3c325d64ff7))
+
 ## [0.8.0](https://github.com/thehazell/id/compare/v0.7.0...v0.8.0) (2026-09-05)
 
 
