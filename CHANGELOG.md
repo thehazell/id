@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.3](https://github.com/thehazell/id/compare/v0.14.2...v0.14.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* you can pass forceDestroy to the R2 stack to empty the bucket ([71df8b6](https://github.com/thehazell/id/commit/71df8b685aed33ca120a401b5cab84c72a38b6df))
+
 ## [0.14.2](https://github.com/thehazell/id/compare/v0.14.1...v0.14.2) (2026-09-06)
 
 
