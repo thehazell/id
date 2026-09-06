@@ -1,36 +1,57 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: OSV-Scanner
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
+    branches: [main]
+
   merge_group:
-    branches: ["main"]
+    branches: [main]
+
+  push:
+    branches: [main]
+
   schedule:
     - cron: "16 13 * * 6"
 
 permissions:
   contents: read
   security-events: write
-  actions: read
 
 jobs:
-  scan-scheduled:
+  scan:
     name: Scan dependencies
-    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
-    with:
-      scan-args:
+    runs-on: ubuntu-latest
 
-  scan-pr:
-    name: Scan PR dependencies
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
-    with:
-      scan-args:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Verify lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f bun.lock ]]; then
+            echo "::error::bun.lock is missing"
+            exit 1
+          fi
+
+          if [[ "$(git ls-files -s -- bun.lock | awk '{print $1}')" == "120000" ]]; then
+            echo "::error::bun.lock must not be a symbolic link"
+            exit 1
+          fi
+
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@baa4139e56d6312335d899e6ba045fa16d1d3d0b # v2.5.1
+        with:
+          scan-args: |-
+            --lockfile=bun.lock
+            --format=sarif
+            --output-file=/tmp/osv-results.sarif
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3.30.3
+        with:
+          sarif_file: /tmp/osv-results.sarif
+          category: osv-scanner
