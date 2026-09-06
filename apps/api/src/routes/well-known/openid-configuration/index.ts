@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 
-import jwksRoute from "./jwks";
+import getRoute from "./get";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.route("/jwks.json", jwksRoute);
+route.route("/", getRoute);
 
 export default route;
