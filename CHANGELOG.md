@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/thehazell/id/compare/v0.12.0...v0.13.0) (2026-09-06)
+
+
+### Features
+
+* admin users page ([1737a4a](https://github.com/thehazell/id/commit/1737a4a8592b30f92e99118168d6b212104d5f7d))
+
 ## [0.12.0](https://github.com/thehazell/id/compare/v0.11.0...v0.12.0) (2026-09-06)
 
 
