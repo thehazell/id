@@ -46,11 +46,23 @@ Install the project dependencies using Bun:
 bun install
 ```
 
+## Generate the OIDC private key
+
+Maze Identity Platform requires an OIDC private key for signing tokens. You do not need to generate this key manually.
+
+Run:
+
+```sh
+bun alchemy/oidc-key.ts
+```
+
+This will generate the `OIDC_PRIVATE_KEY` secret for you.
+
 ## Deploy
 
 Maze Identity Platform uses [Alchemy](https://alchemy.run/) as its infrastructure-as-code layer. The complete infrastructure is managed by Alchemy, including the Cloudflare Workers, D1 database, profile storage, database migrations, and other required resources.
 
-Once your `.env` is configured, the entire platform can be provisioned and deployed with a single command:
+Once your `.env` is configured and the OIDC private key has been generated, the entire platform can be provisioned and deployed with a single command:
 
 ```sh
 bun run deploy
@@ -107,6 +119,7 @@ If deployment fails for another reason, verify that:
 
 * Your Cloudflare credentials have the required permissions.
 * All required `.env` values are populated.
+* The `OIDC_PRIVATE_KEY` has been generated.
 * You are running `bun run deploy` from the repository root.
 
 Because infrastructure and database setup are handled by Alchemy, manual Cloudflare or D1 configuration should generally not be necessary.
@@ -132,6 +145,7 @@ cd id
 bun install
 cp .env.example .env
 # Configure .env
+bun alchemy/oidc-key.ts
 bun run deploy
 ```
 
