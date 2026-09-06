@@ -99,7 +99,7 @@ function ProfilePage() {
 		user?.birthdate,
 		user?.zoneinfo,
 		user?.locale,
-		user
+		user,
 	]);
 
 	const initials = useMemo(() => {
