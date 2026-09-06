@@ -25,11 +25,8 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
       - name: Format
-        run: bun run format
+        run: bunx biome format . --write
 
       - name: Commit formatting changes
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
