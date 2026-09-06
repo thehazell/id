@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/thehazell/id/compare/v0.9.0...v0.10.0) (2026-09-06)
+
+
+### Features
+
+* nescessary claims ([#66](https://github.com/thehazell/id/issues/66)) ([8acdcfb](https://github.com/thehazell/id/commit/8acdcfb64a5cff41a5bd4b615e7c43af07de3243))
+
 ## [0.9.0](https://github.com/thehazell/id/compare/v0.8.0...v0.9.0) (2026-09-05)
 
 
