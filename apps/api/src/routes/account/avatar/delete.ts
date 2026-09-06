@@ -1,0 +1,30 @@
+import { eq } from "drizzle-orm";
+import { Hono } from "hono";
+
+import { createDb } from "@/db";
+import { users } from "@/db/schema";
+import { requireAuth } from "@/middleware/auth";
+
+const route = new Hono<{ Bindings: Env }>();
+
+route.delete("/", requireAuth, async (c) => {
+    const user = c.get("user");
+    const db = createDb(c.env.DB);
+    const key = `profiles/${user.id}/avatar`;
+
+    await c.env.PROFILE_BUCKET.delete(key);
+
+    await db
+        .update(users)
+        .set({
+            profileImageKey: null,
+            updatedAt: Date.now(),
+        })
+        .where(eq(users.id, user.id));
+
+    return c.json({
+        success: true,
+    });
+});
+
+export default route;
