@@ -150,9 +150,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 		const contentType = c.req.header("Content-Type") ?? "";
 
 		if (
-			contentType
-				.toLowerCase()
-				.startsWith("application/x-www-form-urlencoded")
+			contentType.toLowerCase().startsWith("application/x-www-form-urlencoded")
 		) {
 			const body = await c.req.parseBody();
 
@@ -229,9 +227,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 				claims: oauthAuthorizationCodes.claims,
 			})
 			.from(oauthAuthorizationCodes)
-			.where(
-				eq(oauthAuthorizationCodes.id, accessToken.authorizationCodeId),
-			)
+			.where(eq(oauthAuthorizationCodes.id, accessToken.authorizationCodeId))
 			.limit(1);
 
 		const requestedClaims = result[0]?.claims;
@@ -263,9 +259,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 	};
 
 	for (const [claimName, definition] of Object.entries(definitions)) {
-		const hasScope = definition.scope
-			? scopes.has(definition.scope)
-			: false;
+		const hasScope = definition.scope ? scopes.has(definition.scope) : false;
 
 		const explicitlyRequested = requestedUserInfoClaims.has(claimName);
 
