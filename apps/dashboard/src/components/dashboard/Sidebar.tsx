@@ -134,11 +134,14 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
 			</nav>
 
 			<div className="px-5 pb-5 pt-6">
-				<div
-					className="truncate text-[11px] text-zinc-700"
-					title={`Build ${__APP_VERSION__}`}
-				>
-					Build {__APP_VERSION__}
+				<div className="inline-flex items-center gap-1.5 rounded-md border border-white/6 bg-white/22 px-2 py-1 text-[11px]">
+					<span className="text-zinc-600">Build</span>
+					<span
+						className="font-mono font-medium text-zinc-400"
+						title={`Build ${__APP_VERSION__}`}
+					>
+						{__APP_VERSION__}
+					</span>
 				</div>
 			</div>
 		</aside>
