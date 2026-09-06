@@ -23,6 +23,7 @@ approveRoute.post("/", async (c) => {
 		code_challenge?: string;
 		code_challenge_method?: string;
 		acr_values?: string;
+		claims?: string;
 	}>();
 
 	const db = createDb(c.env.DB);

@@ -31,10 +31,20 @@ export interface AuthResponse {
 	user: AuthUser;
 }
 
-export function login(email: string, password: string, rememberMe: boolean) {
+export function login(
+	email: string,
+	password: string,
+	rememberMe: boolean,
+	prompt?: string,
+) {
 	return api<AuthResponse>("/api/auth/login", {
 		method: "POST",
-		body: JSON.stringify({ email, password, rememberMe }),
+		body: JSON.stringify({
+			email,
+			password,
+			rememberMe,
+			prompt,
+		}),
 	});
 }
 

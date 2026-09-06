@@ -20,6 +20,7 @@ export interface AuthorizationRequest {
 	code_challenge?: string;
 	code_challenge_method?: string;
 	acr_values?: string;
+	claims?: string;
 }
 
 export async function validateAuthorizationRequest(
@@ -56,7 +57,8 @@ export async function validateAuthorizationRequest(
 		if (!request.code_challenge_method) {
 			return {
 				error: "invalid_request" as const,
-				error_description: "The code_challenge_method parameter is required.",
+				error_description:
+					"The code_challenge_method parameter is required.",
 			};
 		}
 
@@ -151,9 +153,10 @@ export async function createAuthorizationCode(
 		codeChallenge: request.code_challenge,
 		codeChallengeMethod: request.code_challenge_method,
 		authTime,
+		acr,
+		claims: request.claims,
 		expiresAt: now + AUTHORIZATION_CODE_DURATION,
 		createdAt: now,
-		acr,
 	});
 
 	return code;

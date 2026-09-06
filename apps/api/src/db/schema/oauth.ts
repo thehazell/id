@@ -51,6 +51,7 @@ export const oauthAuthorizationCodes = sqliteTable(
 		expiresAt: integer("expires_at").notNull(),
 		createdAt: integer("created_at").notNull(),
 		usedAt: integer("used_at"),
+		claims: text("claims"),
 	},
 );
 

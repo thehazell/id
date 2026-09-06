@@ -54,6 +54,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 	}
 
 	const db = createDb(c.env.DB);
+
 	const accessToken = await getAccessToken(db, token);
 
 	if (!accessToken) {
@@ -106,14 +107,11 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 		sub: user.id,
 	};
 
-	// OIDC certification requests `name` as an essential UserInfo claim.
-	// Return it whenever the user has a display name, regardless of
-	// whether the `profile` scope was granted.
-	if (user.displayName) {
-		claims.name = user.displayName;
-	}
-
 	if (scopes.has("profile")) {
+		if (user.displayName) {
+			claims.name = user.displayName;
+		}
+
 		if (user.givenName) {
 			claims.given_name = user.givenName;
 		}
@@ -176,6 +174,7 @@ async function userinfo(c: Context<{ Bindings: Env }>) {
 }
 
 userinfoRoute.get("/", userinfo);
+
 userinfoRoute.post("/", userinfo);
 
 export default userinfoRoute;
