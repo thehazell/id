@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/thehazell/id/compare/v0.14.0...v0.14.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* bust admin user avatar cache ([e3de255](https://github.com/thehazell/id/commit/e3de255daf19dd21a5e1afb4a5a87457cd2e8e9a))
+
 ## [0.14.0](https://github.com/thehazell/id/compare/v0.13.0...v0.14.0) (2026-09-06)
 
 
