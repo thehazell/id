@@ -102,9 +102,10 @@ The pre-commit hook runs:
 bun run typecheck
 bun run typecheck:api
 bun run typecheck:dashboard
+bunx --no -- commitlint --edit "$1"
 ```
 
-If a typecheck fails, the commit will be blocked.
+If a typecheck fails or your commit does not use conventional commit style, the commit will be blocked.
 
 ### Bun and Husky
 
