@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.2](https://github.com/thehazell/id/compare/v0.14.1...v0.14.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* **ci:** write OSV SARIF output to workspace ([5db9891](https://github.com/thehazell/id/commit/5db9891a6fa084c46c0b15676f8e05fc9dcd3edf))
+
 ## [0.14.1](https://github.com/thehazell/id/compare/v0.14.0...v0.14.1) (2026-09-06)
 
 
