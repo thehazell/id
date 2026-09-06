@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.0](https://github.com/thehazell/id/compare/v0.11.0...v0.12.0) (2026-09-06)
+
+
+### Features
+
+* organize profile page ([f2961e4](https://github.com/thehazell/id/commit/f2961e482941abbefa5f261fcb32dbcc1a7cb604))
+* profile page organization, generic field component, routing fixes  in api ([#75](https://github.com/thehazell/id/issues/75)) ([0e73b7e](https://github.com/thehazell/id/commit/0e73b7e40ea6983457978ccbedddc163604dcc04))
+
 ## [0.11.0](https://github.com/thehazell/id/compare/v0.10.0...v0.11.0) (2026-09-06)
 
 
