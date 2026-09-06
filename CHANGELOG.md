@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/thehazell/id/compare/v0.13.0...v0.14.0) (2026-09-06)
+
+
+### Features
+
+* users avatar endpoint, various fixes ([#88](https://github.com/thehazell/id/issues/88)) ([876bdff](https://github.com/thehazell/id/commit/876bdff54bb917a82dd2ee0326bc319036a1926f))
+
 ## [0.13.0](https://github.com/thehazell/id/compare/v0.12.0...v0.13.0) (2026-09-06)
 
 
