@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/thehazell/id/compare/v0.10.0...v0.11.0) (2026-09-06)
+
+
+### Features
+
+* organize auth routes ([0510e49](https://github.com/thehazell/id/commit/0510e495e7638aec64f5986e3ba8e31190f1b6df))
+* organize oauth routes ([5b0f6cf](https://github.com/thehazell/id/commit/5b0f6cf70a8d7941029969470fa7b1cb659454db))
+* reorganize admin routes ([8cc1b8b](https://github.com/thehazell/id/commit/8cc1b8b9b2073a2a531735ee7e12614ccfacdedc))
+* reorganize passkeys routes ([6aecabe](https://github.com/thehazell/id/commit/6aecabee8e26350bc7675233d24dbcba5308a9bc))
+* reorganize well-known routes ([d4a4c36](https://github.com/thehazell/id/commit/d4a4c36680ba63af68be1208132b497c7fdffa04))
+* start reorgnizing routes ([5b55cb1](https://github.com/thehazell/id/commit/5b55cb1dd9208a5e8c69437bd2421701283427db))
+
 ## [0.10.0](https://github.com/thehazell/id/compare/v0.9.0...v0.10.0) (2026-09-06)
 
 
