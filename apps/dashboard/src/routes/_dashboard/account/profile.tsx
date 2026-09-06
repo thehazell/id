@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/toast/ToastProvider";
 import Button from "@/components/ui/Button";
+import Field from "@/components/ui/Field";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
 import {
@@ -27,41 +28,64 @@ const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+type ProfileForm = {
+	displayName: string;
+	givenName: string;
+	familyName: string;
+	middleName: string;
+	nickname: string;
+	preferredUsername: string;
+	profileUrl: string;
+	website: string;
+	gender: string;
+	birthdate: string;
+	zoneinfo: string;
+	locale: string;
+};
+
+const EMPTY_PROFILE: ProfileForm = {
+	displayName: "",
+	givenName: "",
+	familyName: "",
+	middleName: "",
+	nickname: "",
+	preferredUsername: "",
+	profileUrl: "",
+	website: "",
+	gender: "",
+	birthdate: "",
+	zoneinfo: "",
+	locale: "",
+};
+
 function ProfilePage() {
 	const { user, refresh } = useAuth();
 	const toast = useToast();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const [displayName, setDisplayName] = useState("");
-	const [givenName, setGivenName] = useState("");
-	const [familyName, setFamilyName] = useState("");
-	const [middleName, setMiddleName] = useState("");
-	const [nickname, setNickname] = useState("");
-	const [preferredUsername, setPreferredUsername] = useState("");
-	const [profileUrl, setProfileUrl] = useState("");
-	const [website, setWebsite] = useState("");
-	const [gender, setGender] = useState("");
-	const [birthdate, setBirthdate] = useState("");
-	const [zoneinfo, setZoneinfo] = useState("");
-	const [locale, setLocale] = useState("");
-
+	const [form, setForm] = useState<ProfileForm>(EMPTY_PROFILE);
 	const [saving, setSaving] = useState(false);
 	const [avatarSaving, setAvatarSaving] = useState(false);
-	const [avatarVersion, setAvatarVersion] = useState<number | null>(null);
 
 	useEffect(() => {
-		setDisplayName(user?.displayName ?? "");
-		setGivenName(user?.givenName ?? "");
-		setFamilyName(user?.familyName ?? "");
-		setMiddleName(user?.middleName ?? "");
-		setNickname(user?.nickname ?? "");
-		setPreferredUsername(user?.preferredUsername ?? "");
-		setProfileUrl(user?.profileUrl ?? "");
-		setWebsite(user?.website ?? "");
-		setGender(user?.gender ?? "");
-		setBirthdate(user?.birthdate ?? "");
-		setZoneinfo(user?.zoneinfo ?? "");
-		setLocale(user?.locale ?? "");
+		if (!user) {
+			return;
+		}
+
+		setForm({
+			displayName: user.displayName ?? "",
+			givenName: user.givenName ?? "",
+			familyName: user.familyName ?? "",
+			middleName: user.middleName ?? "",
+			nickname: user.nickname ?? "",
+			preferredUsername: user.preferredUsername ?? "",
+			profileUrl: user.profileUrl ?? "",
+			website: user.website ?? "",
+			gender: user.gender ?? "",
+			birthdate: user.birthdate ?? "",
+			zoneinfo: user.zoneinfo ?? "",
+			locale: user.locale ?? "",
+		});
 	}, [
 		user?.displayName,
 		user?.givenName,
@@ -75,16 +99,8 @@ function ProfilePage() {
 		user?.birthdate,
 		user?.zoneinfo,
 		user?.locale,
+		user
 	]);
-
-	useEffect(() => {
-		if (!user?.profileImageKey) {
-			setAvatarVersion(null);
-			return;
-		}
-
-		setAvatarVersion(Date.now());
-	}, [user?.profileImageKey]);
 
 	const initials = useMemo(() => {
 		if (!user) {
@@ -114,18 +130,28 @@ function ProfilePage() {
 	}
 
 	const isDirty =
-		displayName.trim() !== (user.displayName ?? "") ||
-		givenName.trim() !== (user.givenName ?? "") ||
-		familyName.trim() !== (user.familyName ?? "") ||
-		middleName.trim() !== (user.middleName ?? "") ||
-		nickname.trim() !== (user.nickname ?? "") ||
-		preferredUsername.trim() !== (user.preferredUsername ?? "") ||
-		profileUrl.trim() !== (user.profileUrl ?? "") ||
-		website.trim() !== (user.website ?? "") ||
-		gender.trim() !== (user.gender ?? "") ||
-		birthdate.trim() !== (user.birthdate ?? "") ||
-		zoneinfo.trim() !== (user.zoneinfo ?? "") ||
-		locale.trim() !== (user.locale ?? "");
+		form.displayName.trim() !== (user.displayName ?? "") ||
+		form.givenName.trim() !== (user.givenName ?? "") ||
+		form.familyName.trim() !== (user.familyName ?? "") ||
+		form.middleName.trim() !== (user.middleName ?? "") ||
+		form.nickname.trim() !== (user.nickname ?? "") ||
+		form.preferredUsername.trim() !== (user.preferredUsername ?? "") ||
+		form.profileUrl.trim() !== (user.profileUrl ?? "") ||
+		form.website.trim() !== (user.website ?? "") ||
+		form.gender.trim() !== (user.gender ?? "") ||
+		form.birthdate.trim() !== (user.birthdate ?? "") ||
+		form.zoneinfo.trim() !== (user.zoneinfo ?? "") ||
+		form.locale.trim() !== (user.locale ?? "");
+
+	function setField<K extends keyof ProfileForm>(
+		field: K,
+		value: ProfileForm[K],
+	) {
+		setForm((current) => ({
+			...current,
+			[field]: value,
+		}));
+	}
 
 	function openFilePicker() {
 		fileInputRef.current?.click();
@@ -137,7 +163,6 @@ function ProfilePage() {
 		>[0],
 	) {
 		const file = event.target.files?.[0];
-
 		event.target.value = "";
 
 		if (!file) {
@@ -204,18 +229,18 @@ function ProfilePage() {
 
 		try {
 			await updateProfile({
-				displayName: displayName.trim(),
-				givenName: givenName.trim(),
-				familyName: familyName.trim(),
-				middleName: middleName.trim(),
-				nickname: nickname.trim(),
-				preferredUsername: preferredUsername.trim(),
-				profileUrl: profileUrl.trim(),
-				website: website.trim(),
-				gender: gender.trim(),
-				birthdate: birthdate.trim(),
-				zoneinfo: zoneinfo.trim(),
-				locale: locale.trim(),
+				displayName: form.displayName.trim(),
+				givenName: form.givenName.trim(),
+				familyName: form.familyName.trim(),
+				middleName: form.middleName.trim(),
+				nickname: form.nickname.trim(),
+				preferredUsername: form.preferredUsername.trim(),
+				profileUrl: form.profileUrl.trim(),
+				website: form.website.trim(),
+				gender: form.gender.trim(),
+				birthdate: form.birthdate.trim(),
+				zoneinfo: form.zoneinfo.trim(),
+				locale: form.locale.trim(),
 			});
 
 			await refresh();
@@ -238,7 +263,6 @@ function ProfilePage() {
 				<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
 					Profile
 				</h1>
-
 				<p className="mt-2 text-sm leading-6 text-zinc-500">
 					Manage your personal account information.
 				</p>
@@ -252,7 +276,7 @@ function ProfilePage() {
 							<div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-900 text-lg font-semibold text-zinc-300 ring-1 ring-violet-400/10">
 								{user.profileImageKey ? (
 									<img
-										src={`${getProfileAvatarUrl()}?v=${avatarVersion ?? 0}`}
+										src={`${getProfileAvatarUrl()}?v=${encodeURIComponent(user.profileImageKey)}`}
 										alt=""
 										className="h-full w-full object-cover"
 									/>
@@ -322,124 +346,59 @@ function ProfilePage() {
 						</div>
 
 						<div className="space-y-5">
-							<div>
-								<label
-									htmlFor="display-name"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Display name
-								</label>
+							<Field
+								id="display-name"
+								label="Display name"
+								value={form.displayName}
+								onChange={(value) => setField("displayName", value)}
+								autoComplete="name"
+								disabled={saving}
+							/>
 
-								<Input
-									id="display-name"
-									value={displayName}
-									onChange={(event) => setDisplayName(event.target.value)}
-									placeholder="Your name"
-									autoComplete="name"
-									maxLength={100}
-									disabled={saving}
-								/>
+							<Field
+								id="given-name"
+								label="Given name"
+								value={form.givenName}
+								onChange={(value) => setField("givenName", value)}
+								autoComplete="given-name"
+								disabled={saving}
+							/>
 
-								<div className="mt-2 flex justify-between text-xs text-zinc-600">
-									<span>This name will be shown throughout Maze ID.</span>
+							<Field
+								id="middle-name"
+								label="Middle name"
+								value={form.middleName}
+								onChange={(value) => setField("middleName", value)}
+								autoComplete="additional-name"
+								disabled={saving}
+							/>
 
-									<span>{displayName.length}/100</span>
-								</div>
-							</div>
+							<Field
+								id="family-name"
+								label="Family name"
+								value={form.familyName}
+								onChange={(value) => setField("familyName", value)}
+								autoComplete="family-name"
+								disabled={saving}
+							/>
 
-							<div>
-								<label
-									htmlFor="given-name"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Given name
-								</label>
+							<Field
+								id="nickname"
+								label="Nickname"
+								value={form.nickname}
+								onChange={(value) => setField("nickname", value)}
+								autoComplete="nickname"
+								disabled={saving}
+							/>
 
-								<Input
-									id="given-name"
-									value={givenName}
-									onChange={(event) => setGivenName(event.target.value)}
-									placeholder="First name"
-									autoComplete="given-name"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="middle-name"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Middle name
-								</label>
-
-								<Input
-									id="middle-name"
-									value={middleName}
-									onChange={(event) => setMiddleName(event.target.value)}
-									placeholder="Middle name"
-									autoComplete="additional-name"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="family-name"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Family name
-								</label>
-
-								<Input
-									id="family-name"
-									value={familyName}
-									onChange={(event) => setFamilyName(event.target.value)}
-									placeholder="Last name"
-									autoComplete="family-name"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="nickname"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Nickname
-								</label>
-
-								<Input
-									id="nickname"
-									value={nickname}
-									onChange={(event) => setNickname(event.target.value)}
-									placeholder="Nickname"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="preferred-username"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Preferred username
-								</label>
-
-								<Input
-									id="preferred-username"
-									value={preferredUsername}
-									onChange={(event) => setPreferredUsername(event.target.value)}
-									placeholder="username"
-									autoComplete="username"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
+							<Field
+								id="preferred-username"
+								label="Preferred username"
+								value={form.preferredUsername}
+								onChange={(value) => setField("preferredUsername", value)}
+								autoComplete="username"
+								disabled={saving}
+							/>
 
 							<div>
 								<label
@@ -449,21 +408,29 @@ function ProfilePage() {
 									Email address
 								</label>
 
-								<Input id="email" value={user.email} disabled readOnly />
-
-								<div className="mt-2 flex items-center gap-2 text-xs">
-									<span
-										className={`h-1.5 w-1.5 rounded-full ${
-											user.emailVerifiedAt ? "bg-emerald-400" : "bg-amber-400"
-										}`}
+								<div className="relative">
+									<Input
+										id="email"
+										type="email"
+										value={user.email}
+										disabled
+										readOnly
 									/>
 
-									<span className="text-zinc-500">
-										{user.emailVerifiedAt
-											? "Email verified"
-											: "Email not verified"}
-									</span>
+									<div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+										<span
+											className={`h-2 w-2 rounded-full ${
+												user.emailVerifiedAt ? "bg-emerald-400" : "bg-amber-400"
+											}`}
+										/>
+									</div>
 								</div>
+
+								<p className="mt-2 text-xs text-zinc-600">
+									{user.emailVerifiedAt
+										? "Your email address is verified."
+										: "Your email address is not verified."}
+								</p>
 							</div>
 						</div>
 					</div>
@@ -479,42 +446,26 @@ function ProfilePage() {
 						</div>
 
 						<div className="space-y-5">
-							<div>
-								<label
-									htmlFor="profile-url"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Profile URL
-								</label>
+							<Field
+								id="profile-url"
+								label="Profile URL"
+								value={form.profileUrl}
+								onChange={(value) => setField("profileUrl", value)}
+								type="url"
+								autoComplete="url"
+								placeholder="https://example.com/profile"
+								disabled={saving}
+							/>
 
-								<Input
-									id="profile-url"
-									type="url"
-									value={profileUrl}
-									onChange={(event) => setProfileUrl(event.target.value)}
-									placeholder="https://example.com/profile"
-									autoComplete="url"
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="website"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Website
-								</label>
-
-								<Input
-									id="website"
-									type="url"
-									value={website}
-									onChange={(event) => setWebsite(event.target.value)}
-									placeholder="https://example.com"
-									disabled={saving}
-								/>
-							</div>
+							<Field
+								id="website"
+								label="Website"
+								value={form.website}
+								onChange={(value) => setField("website", value)}
+								type="url"
+								placeholder="https://example.com"
+								disabled={saving}
+							/>
 						</div>
 					</div>
 
@@ -532,74 +483,40 @@ function ProfilePage() {
 						</div>
 
 						<div className="space-y-5">
-							<div>
-								<label
-									htmlFor="gender"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Gender
-								</label>
+							<Field
+								id="gender"
+								label="Gender"
+								value={form.gender}
+								onChange={(value) => setField("gender", value)}
+								disabled={saving}
+							/>
 
-								<Input
-									id="gender"
-									value={gender}
-									onChange={(event) => setGender(event.target.value)}
-									placeholder="Gender"
-									maxLength={100}
-									disabled={saving}
-								/>
-							</div>
+							<Field
+								id="birthdate"
+								label="Birthdate"
+								value={form.birthdate}
+								onChange={(value) => setField("birthdate", value)}
+								type="date"
+								disabled={saving}
+							/>
 
-							<div>
-								<label
-									htmlFor="birthdate"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Birthdate
-								</label>
+							<Field
+								id="zoneinfo"
+								label="Time zone"
+								value={form.zoneinfo}
+								onChange={(value) => setField("zoneinfo", value)}
+								placeholder="America/New_York"
+								disabled={saving}
+							/>
 
-								<Input
-									id="birthdate"
-									type="date"
-									value={birthdate}
-									onChange={(event) => setBirthdate(event.target.value)}
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="zoneinfo"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Time zone
-								</label>
-
-								<Input
-									id="zoneinfo"
-									value={zoneinfo}
-									onChange={(event) => setZoneinfo(event.target.value)}
-									placeholder="America/New_York"
-									disabled={saving}
-								/>
-							</div>
-
-							<div>
-								<label
-									htmlFor="locale"
-									className="mb-2 block text-sm font-medium text-zinc-300"
-								>
-									Locale
-								</label>
-
-								<Input
-									id="locale"
-									value={locale}
-									onChange={(event) => setLocale(event.target.value)}
-									placeholder="en-US"
-									disabled={saving}
-								/>
-							</div>
+							<Field
+								id="locale"
+								label="Locale"
+								value={form.locale}
+								onChange={(value) => setField("locale", value)}
+								placeholder="en-US"
+								disabled={saving}
+							/>
 						</div>
 					</div>
 
