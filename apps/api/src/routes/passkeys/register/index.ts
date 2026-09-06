@@ -1,15 +1,11 @@
 import { Hono } from "hono";
 
-import getRoute from "./get";
 import optionsRoute from "./options";
 import verifyRoute from "./verify";
-import passkeyRoute from "./:id";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.route("/", getRoute);
 route.route("/options", optionsRoute);
 route.route("/verify", verifyRoute);
-route.route("/:id", passkeyRoute);
 
 export default route;

@@ -1,0 +1,166 @@
+import {
+    verifyAuthenticationResponse,
+    type AuthenticationResponseJSON,
+} from "@simplewebauthn/server";
+import { eq } from "drizzle-orm";
+import { Hono } from "hono";
+
+import { createDb } from "@/db";
+import { passkeys, users } from "@/db/schema";
+import { setSessionCookie } from "@/lib/cookie";
+import {
+    base64ToUint8Array,
+    consumeChallengeById,
+    getChallengeById,
+} from "@/lib/passkey";
+import { createSession } from "@/lib/session";
+
+interface CloudflareRequestProperties {
+    country?: string;
+    city?: string;
+    region?: string;
+}
+
+const route = new Hono<{ Bindings: Env }>();
+
+route.post("/", async (c) => {
+    const body = await c.req.json<{
+        challengeId?: string;
+        response: AuthenticationResponseJSON;
+    }>();
+
+    if (!body.challengeId) {
+        return c.json(
+            {
+                error: "Authentication challenge is required.",
+            },
+            400,
+        );
+    }
+
+    const db = createDb(c.env.DB);
+
+    const challenge = await getChallengeById(
+        db,
+        body.challengeId,
+    );
+
+    if (!challenge) {
+        return c.json(
+            {
+                error: "Authentication challenge not found or expired.",
+            },
+            400,
+        );
+    }
+
+    const credentialResult = await db
+        .select()
+        .from(passkeys)
+        .where(eq(passkeys.credentialId, body.response.id))
+        .limit(1);
+
+    const passkey = credentialResult[0];
+
+    if (!passkey) {
+        return c.json(
+            {
+                error: "Invalid passkey.",
+            },
+            401,
+        );
+    }
+
+    const userResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, passkey.userId))
+        .limit(1);
+
+    const user = userResult[0];
+
+    if (!user) {
+        return c.json(
+            {
+                error: "Unable to sign in with passkey.",
+            },
+            401,
+        );
+    }
+
+    try {
+        const expectedOrigin = `${
+            c.env.LOCALHOST ? "http" : "https"
+        }://${c.env.DASHBOARD_DOMAIN}`;
+
+        const expectedRPID = c.env.RP_ID;
+
+        const verification = await verifyAuthenticationResponse({
+            response: body.response,
+            expectedChallenge: challenge.challenge,
+            expectedOrigin,
+            expectedRPID,
+            credential: {
+                id: passkey.credentialId,
+                publicKey: base64ToUint8Array(passkey.publicKey),
+                counter: passkey.counter,
+                transports: passkey.transports
+                    ? JSON.parse(passkey.transports)
+                    : undefined,
+            },
+        });
+
+        if (!verification.verified) {
+            return c.json(
+                {
+                    error: "Passkey authentication failed.",
+                },
+                401,
+            );
+        }
+
+        await db
+            .update(passkeys)
+            .set({
+                counter:
+                    verification.authenticationInfo.newCounter,
+                lastUsedAt: Date.now(),
+            })
+            .where(eq(passkeys.id, passkey.id));
+
+        await consumeChallengeById(
+            db,
+            body.challengeId,
+        );
+
+        const cf = c.req.raw.cf as
+            | CloudflareRequestProperties
+            | undefined;
+
+        const session = await createSession(db, user.id, {
+            ipAddress: c.req.header("CF-Connecting-IP"),
+            country: cf?.country,
+            city: cf?.city,
+            region: cf?.region,
+            userAgent: c.req.header("User-Agent"),
+        });
+
+        setSessionCookie(c, session.token);
+
+        return c.json({
+            user: {
+                id: user.id,
+                email: user.email,
+            },
+        });
+    } catch {
+        return c.json(
+            {
+                error: "Unable to verify passkey authentication.",
+            },
+            400,
+        );
+    }
+});
+
+export default route;
