@@ -6,13 +6,13 @@ on:
       - main
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   format:
     name: Format
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -29,7 +29,9 @@ jobs:
         run: bunx biome format . --write
 
       - name: Commit formatting changes
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         run: |
           if git diff --quiet; then
             echo "No formatting changes."
@@ -44,10 +46,13 @@ jobs:
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Check formatting
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name != github.repository
         run: |
           if ! git diff --quiet; then
             echo "::error::Formatting changes are required."
+            echo "Run 'bun run format' locally and push the changes."
             git diff --check
             exit 1
           fi
@@ -55,6 +60,9 @@ jobs:
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
