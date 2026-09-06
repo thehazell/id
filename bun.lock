@@ -11,6 +11,7 @@
         "@simplewebauthn/server": "14.0.1",
         "alchemy": "2.0.0-beta.76",
         "effect": "4.0.0-rc.112",
+        "hono": "4.12.3",
         "wrangler": "4.129.0",
       },
       "devDependencies": {
@@ -32,7 +33,7 @@
         "@types/node": "26.4.1",
         "argon2-wasm-edge": "1.0.23",
         "drizzle-orm": "1.0.0-rc.5-ab785fc",
-        "hono": "4.13.7",
+        "hono": "4.12.3",
       },
       "devDependencies": {
         "@cloudflare/workers-types": "5.20260906.1",
@@ -978,7 +979,7 @@
 
     "hashery": ["hashery@1.5.1", "", { "dependencies": { "hookified": "^1.15.0" } }, "sha512-iZyKG96/JwPz1N55vj2Ie2vXbhu440zfUfJvSwEqEbeLluk7NnapfGqa7LH0mOsnDxTF85Mx8/dyR6HfqcbmbQ=="],
 
-    "hono": ["hono@4.13.7", "", {}, "sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ=="],
+    "hono": ["hono@4.12.3", "", {}, "sha512-SFsVSjp8sj5UumXOOFlkZOG6XS9SJDKw0TbwFeV+AJ8xlST8kxK5Z/5EYa111UY8732lK2S/xB653ceuaoGwpg=="],
 
     "hookified": ["hookified@1.15.1", "", {}, "sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg=="],
 

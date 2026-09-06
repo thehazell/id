@@ -37,6 +37,7 @@
     "@simplewebauthn/server": "14.0.1",
     "alchemy": "2.0.0-beta.76",
     "effect": "4.0.0-rc.112",
+    "hono": "4.12.3",
     "wrangler": "4.129.0"
   }
 }
