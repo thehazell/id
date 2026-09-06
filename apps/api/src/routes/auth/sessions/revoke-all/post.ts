@@ -2,36 +2,29 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import {
-    deleteOtherSessions,
-    getSession,
-} from "@/lib/session";
+import { deleteOtherSessions, getSession } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
 
 route.post("/", async (c) => {
-    const token = getCookie(c, "session");
+	const token = getCookie(c, "session");
 
-    if (!token) {
-        return c.json({ error: "Unauthorized" }, 401);
-    }
+	if (!token) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-    const db = createDb(c.env.DB);
-    const currentSession = await getSession(db, token);
+	const db = createDb(c.env.DB);
+	const currentSession = await getSession(db, token);
 
-    if (!currentSession) {
-        return c.json({ error: "Unauthorized" }, 401);
-    }
+	if (!currentSession) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-    await deleteOtherSessions(
-        db,
-        currentSession.userId,
-        currentSession.id,
-    );
+	await deleteOtherSessions(db, currentSession.userId, currentSession.id);
 
-    return c.json({
-        success: true,
-    });
+	return c.json({
+		success: true,
+	});
 });
 
 export default route;

@@ -8,19 +8,19 @@ import { deleteSession } from "@/lib/session";
 const route = new Hono<{ Bindings: Env }>();
 
 route.post("/", async (c) => {
-    const token = getCookie(c, "session");
+	const token = getCookie(c, "session");
 
-    if (token) {
-        const db = createDb(c.env.DB);
+	if (token) {
+		const db = createDb(c.env.DB);
 
-        await deleteSession(db, token);
-    }
+		await deleteSession(db, token);
+	}
 
-    clearSessionCookie(c);
+	clearSessionCookie(c);
 
-    return c.json({
-        success: true,
-    });
+	return c.json({
+		success: true,
+	});
 });
 
 export default route;

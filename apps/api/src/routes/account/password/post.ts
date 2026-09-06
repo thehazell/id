@@ -11,92 +11,92 @@ import { requireAuth } from "@/middleware/auth";
 const route = new Hono<{ Bindings: Env }>();
 
 route.post("/", requireAuth, async (c) => {
-    const user = c.get("user");
+	const user = c.get("user");
 
-    const body = await c.req.json<{
-        currentPassword?: string;
-        newPassword?: string;
-    }>();
+	const body = await c.req.json<{
+		currentPassword?: string;
+		newPassword?: string;
+	}>();
 
-    const currentPassword = body.currentPassword;
-    const newPassword = body.newPassword;
+	const currentPassword = body.currentPassword;
+	const newPassword = body.newPassword;
 
-    if (!currentPassword || !newPassword) {
-        return c.json(
-            {
-                error: "Current password and new password are required",
-            },
-            400,
-        );
-    }
+	if (!currentPassword || !newPassword) {
+		return c.json(
+			{
+				error: "Current password and new password are required",
+			},
+			400,
+		);
+	}
 
-    if (newPassword.length < 8) {
-        return c.json(
-            {
-                error: "New password must be at least 8 characters",
-            },
-            400,
-        );
-    }
+	if (newPassword.length < 8) {
+		return c.json(
+			{
+				error: "New password must be at least 8 characters",
+			},
+			400,
+		);
+	}
 
-    const db = createDb(c.env.DB);
+	const db = createDb(c.env.DB);
 
 	const sessionToken = getCookie(c, "session");
 
-    if (!sessionToken) {
-        return c.json({ error: "Unauthorized" }, 401);
-    }
+	if (!sessionToken) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-    const session = await getSession(db, sessionToken);
+	const session = await getSession(db, sessionToken);
 
-    if (!session) {
-        return c.json({ error: "Unauthorized" }, 401);
-    }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-    const result = await db
-        .select({
-            id: users.id,
-            passwordHash: users.passwordHash,
-        })
-        .from(users)
-        .where(eq(users.id, user.id))
-        .limit(1);
+	const result = await db
+		.select({
+			id: users.id,
+			passwordHash: users.passwordHash,
+		})
+		.from(users)
+		.where(eq(users.id, user.id))
+		.limit(1);
 
-    const account = result[0];
+	const account = result[0];
 
-    if (!account) {
-        return c.json({ error: "Unauthorized" }, 401);
-    }
+	if (!account) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-    const validPassword = await verifyPassword(
-        currentPassword,
-        account.passwordHash,
-    );
+	const validPassword = await verifyPassword(
+		currentPassword,
+		account.passwordHash,
+	);
 
-    if (!validPassword) {
-        return c.json(
-            {
-                error: "Current password is incorrect",
-            },
-            400,
-        );
-    }
+	if (!validPassword) {
+		return c.json(
+			{
+				error: "Current password is incorrect",
+			},
+			400,
+		);
+	}
 
-    const passwordHash = await hashPassword(newPassword);
+	const passwordHash = await hashPassword(newPassword);
 
-    await db
-        .update(users)
-        .set({
-            passwordHash,
-            updatedAt: Date.now(),
-        })
-        .where(eq(users.id, user.id));
+	await db
+		.update(users)
+		.set({
+			passwordHash,
+			updatedAt: Date.now(),
+		})
+		.where(eq(users.id, user.id));
 
-    await deleteOtherSessions(db, user.id, session.id);
+	await deleteOtherSessions(db, user.id, session.id);
 
-    return c.json({
-        success: true,
-    });
+	return c.json({
+		success: true,
+	});
 });
 
 export default route;

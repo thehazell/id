@@ -1,165 +1,140 @@
 import {
-    verifyRegistrationResponse,
-    type RegistrationResponseJSON,
+	verifyRegistrationResponse,
+	type RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import {
-    passkeyChallenges,
-    passkeys,
-} from "@/db/schema";
-import {
-    arrayBufferToBase64,
-    getChallenge,
-} from "@/lib/passkey";
+import { passkeyChallenges, passkeys } from "@/db/schema";
+import { arrayBufferToBase64, getChallenge } from "@/lib/passkey";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
 
 route.post("/", async (c) => {
-    const token = getCookie(c, "session");
+	const token = getCookie(c, "session");
 
-    if (!token) {
-        return c.json(
-            {
-                error: "Unauthorized",
-            },
-            401,
-        );
-    }
+	if (!token) {
+		return c.json(
+			{
+				error: "Unauthorized",
+			},
+			401,
+		);
+	}
 
-    const db = createDb(c.env.DB);
-    const user = await getSessionUser(db, token);
+	const db = createDb(c.env.DB);
+	const user = await getSessionUser(db, token);
 
-    if (!user) {
-        return c.json(
-            {
-                error: "Unauthorized",
-            },
-            401,
-        );
-    }
+	if (!user) {
+		return c.json(
+			{
+				error: "Unauthorized",
+			},
+			401,
+		);
+	}
 
-    const challenge = await getChallenge(db, user.id);
+	const challenge = await getChallenge(db, user.id);
 
-    if (!challenge) {
-        return c.json(
-            {
-                error: "Registration challenge not found or expired.",
-            },
-            400,
-        );
-    }
+	if (!challenge) {
+		return c.json(
+			{
+				error: "Registration challenge not found or expired.",
+			},
+			400,
+		);
+	}
 
-    const body = await c.req.json<{
-        response: RegistrationResponseJSON;
-        name?: string;
-    }>();
+	const body = await c.req.json<{
+		response: RegistrationResponseJSON;
+		name?: string;
+	}>();
 
-    const name = body.name?.trim() || null;
+	const name = body.name?.trim() || null;
 
-    try {
-        const expectedOrigin = `${
-            c.env.LOCALHOST ? "http" : "https"
-        }://${c.env.DASHBOARD_DOMAIN}`;
+	try {
+		const expectedOrigin = `${
+			c.env.LOCALHOST ? "http" : "https"
+		}://${c.env.DASHBOARD_DOMAIN}`;
 
-        const expectedRPID = c.env.RP_ID;
+		const expectedRPID = c.env.RP_ID;
 
-        const verification = await verifyRegistrationResponse({
-            response: body.response,
-            expectedChallenge: challenge.challenge,
-            expectedOrigin,
-            expectedRPID,
-        });
+		const verification = await verifyRegistrationResponse({
+			response: body.response,
+			expectedChallenge: challenge.challenge,
+			expectedOrigin,
+			expectedRPID,
+		});
 
-        if (
-            !verification.verified ||
-            !verification.registrationInfo
-        ) {
-            return c.json(
-                {
-                    error: "Passkey registration failed.",
-                },
-                400,
-            );
-        }
+		if (!verification.verified || !verification.registrationInfo) {
+			return c.json(
+				{
+					error: "Passkey registration failed.",
+				},
+				400,
+			);
+		}
 
-        const { credential } = verification.registrationInfo;
+		const { credential } = verification.registrationInfo;
 
-        const existingCredential = await db
-            .select({
-                id: passkeys.id,
-            })
-            .from(passkeys)
-            .where(
-                eq(
-                    passkeys.credentialId,
-                    credential.id,
-                ),
-            )
-            .limit(1);
+		const existingCredential = await db
+			.select({
+				id: passkeys.id,
+			})
+			.from(passkeys)
+			.where(eq(passkeys.credentialId, credential.id))
+			.limit(1);
 
-        if (existingCredential[0]) {
-            return c.json(
-                {
-                    error: "This passkey is already registered.",
-                },
-                409,
-            );
-        }
+		if (existingCredential[0]) {
+			return c.json(
+				{
+					error: "This passkey is already registered.",
+				},
+				409,
+			);
+		}
 
-        const now = Date.now();
+		const now = Date.now();
 
-        await db.insert(passkeys).values({
-            id: crypto.randomUUID(),
-            userId: user.id,
-            credentialId: credential.id,
-            publicKey: arrayBufferToBase64(
-                credential.publicKey,
-            ),
-            counter: credential.counter,
-            transports: credential.transports
-                ? JSON.stringify(credential.transports)
-                : null,
-            name,
-            createdAt: now,
-            lastUsedAt: null,
-        });
+		await db.insert(passkeys).values({
+			id: crypto.randomUUID(),
+			userId: user.id,
+			credentialId: credential.id,
+			publicKey: arrayBufferToBase64(credential.publicKey),
+			counter: credential.counter,
+			transports: credential.transports
+				? JSON.stringify(credential.transports)
+				: null,
+			name,
+			createdAt: now,
+			lastUsedAt: null,
+		});
 
-        await db
-            .delete(passkeyChallenges)
-            .where(
-                and(
-                    eq(
-                        passkeyChallenges.id,
-                        challenge.id,
-                    ),
-                    eq(
-                        passkeyChallenges.userId,
-                        user.id,
-                    ),
-                ),
-            );
+		await db
+			.delete(passkeyChallenges)
+			.where(
+				and(
+					eq(passkeyChallenges.id, challenge.id),
+					eq(passkeyChallenges.userId, user.id),
+				),
+			);
 
-        return c.json({
-            success: true,
-        });
-    } catch (error) {
-        console.error(
-            "[Passkey] Registration verification error:",
-            error,
-        );
+		return c.json({
+			success: true,
+		});
+	} catch (error) {
+		console.error("[Passkey] Registration verification error:", error);
 
-        return c.json(
-            {
-                error: "Unable to verify passkey registration.",
-            },
-            400,
-        );
-    }
+		return c.json(
+			{
+				error: "Unable to verify passkey registration.",
+			},
+			400,
+		);
+	}
 });
 
 export default route;

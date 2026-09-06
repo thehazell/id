@@ -8,219 +8,216 @@ import { requireAuth } from "@/middleware/auth";
 const route = new Hono<{ Bindings: Env }>();
 
 route.patch("/", requireAuth, async (c) => {
-    const body = await c.req.json();
+	const body = await c.req.json();
 
-    if (typeof body !== "object" || body === null) {
-        return c.json(
-            {
-                error: "Request body must be an object.",
-            },
-            400,
-        );
-    }
+	if (typeof body !== "object" || body === null) {
+		return c.json(
+			{
+				error: "Request body must be an object.",
+			},
+			400,
+		);
+	}
 
-    const updates: Partial<typeof users.$inferInsert> = {};
+	const updates: Partial<typeof users.$inferInsert> = {};
 
-    if ("displayName" in body) {
-        if (typeof body.displayName !== "string") {
-            return c.json(
-                {
-                    error: "Display name must be a string.",
-                },
-                400,
-            );
-        }
+	if ("displayName" in body) {
+		if (typeof body.displayName !== "string") {
+			return c.json(
+				{
+					error: "Display name must be a string.",
+				},
+				400,
+			);
+		}
 
-        const displayName = body.displayName.trim();
+		const displayName = body.displayName.trim();
 
-        if (displayName.length > 100) {
-            return c.json(
-                {
-                    error: "Display name must be 100 characters or fewer.",
-                },
-                400,
-            );
-        }
+		if (displayName.length > 100) {
+			return c.json(
+				{
+					error: "Display name must be 100 characters or fewer.",
+				},
+				400,
+			);
+		}
 
-        updates.displayName = displayName || null;
-    }
+		updates.displayName = displayName || null;
+	}
 
-    if ("givenName" in body) {
-        if (typeof body.givenName !== "string") {
-            return c.json(
-                {
-                    error: "Given name must be a string.",
-                },
-                400,
-            );
-        }
+	if ("givenName" in body) {
+		if (typeof body.givenName !== "string") {
+			return c.json(
+				{
+					error: "Given name must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.givenName = body.givenName.trim() || null;
-    }
+		updates.givenName = body.givenName.trim() || null;
+	}
 
-    if ("familyName" in body) {
-        if (typeof body.familyName !== "string") {
-            return c.json(
-                {
-                    error: "Family name must be a string.",
-                },
-                400,
-            );
-        }
+	if ("familyName" in body) {
+		if (typeof body.familyName !== "string") {
+			return c.json(
+				{
+					error: "Family name must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.familyName = body.familyName.trim() || null;
-    }
+		updates.familyName = body.familyName.trim() || null;
+	}
 
-    if ("middleName" in body) {
-        if (typeof body.middleName !== "string") {
-            return c.json(
-                {
-                    error: "Middle name must be a string.",
-                },
-                400,
-            );
-        }
+	if ("middleName" in body) {
+		if (typeof body.middleName !== "string") {
+			return c.json(
+				{
+					error: "Middle name must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.middleName = body.middleName.trim() || null;
-    }
+		updates.middleName = body.middleName.trim() || null;
+	}
 
-    if ("nickname" in body) {
-        if (typeof body.nickname !== "string") {
-            return c.json(
-                {
-                    error: "Nickname must be a string.",
-                },
-                400,
-            );
-        }
+	if ("nickname" in body) {
+		if (typeof body.nickname !== "string") {
+			return c.json(
+				{
+					error: "Nickname must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.nickname = body.nickname.trim() || null;
-    }
+		updates.nickname = body.nickname.trim() || null;
+	}
 
-    if ("preferredUsername" in body) {
-        if (typeof body.preferredUsername !== "string") {
-            return c.json(
-                {
-                    error: "Preferred username must be a string.",
-                },
-                400,
-            );
-        }
+	if ("preferredUsername" in body) {
+		if (typeof body.preferredUsername !== "string") {
+			return c.json(
+				{
+					error: "Preferred username must be a string.",
+				},
+				400,
+			);
+		}
 
-        const preferredUsername = body.preferredUsername.trim();
+		const preferredUsername = body.preferredUsername.trim();
 
-        if (preferredUsername.length > 100) {
-            return c.json(
-                {
-                    error: "Preferred username must be 100 characters or fewer.",
-                },
-                400,
-            );
-        }
+		if (preferredUsername.length > 100) {
+			return c.json(
+				{
+					error: "Preferred username must be 100 characters or fewer.",
+				},
+				400,
+			);
+		}
 
-        updates.preferredUsername = preferredUsername || null;
-    }
+		updates.preferredUsername = preferredUsername || null;
+	}
 
-    if ("profileUrl" in body) {
-        if (typeof body.profileUrl !== "string") {
-            return c.json(
-                {
-                    error: "Profile URL must be a string.",
-                },
-                400,
-            );
-        }
+	if ("profileUrl" in body) {
+		if (typeof body.profileUrl !== "string") {
+			return c.json(
+				{
+					error: "Profile URL must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.profileUrl = body.profileUrl.trim() || null;
-    }
+		updates.profileUrl = body.profileUrl.trim() || null;
+	}
 
-    if ("website" in body) {
-        if (typeof body.website !== "string") {
-            return c.json(
-                {
-                    error: "Website must be a string.",
-                },
-                400,
-            );
-        }
+	if ("website" in body) {
+		if (typeof body.website !== "string") {
+			return c.json(
+				{
+					error: "Website must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.website = body.website.trim() || null;
-    }
+		updates.website = body.website.trim() || null;
+	}
 
-    if ("gender" in body) {
-        if (typeof body.gender !== "string") {
-            return c.json(
-                {
-                    error: "Gender must be a string.",
-                },
-                400,
-            );
-        }
+	if ("gender" in body) {
+		if (typeof body.gender !== "string") {
+			return c.json(
+				{
+					error: "Gender must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.gender = body.gender.trim() || null;
-    }
+		updates.gender = body.gender.trim() || null;
+	}
 
-    if ("birthdate" in body) {
-        if (typeof body.birthdate !== "string") {
-            return c.json(
-                {
-                    error: "Birthdate must be a string.",
-                },
-                400,
-            );
-        }
+	if ("birthdate" in body) {
+		if (typeof body.birthdate !== "string") {
+			return c.json(
+				{
+					error: "Birthdate must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.birthdate = body.birthdate.trim() || null;
-    }
+		updates.birthdate = body.birthdate.trim() || null;
+	}
 
-    if ("zoneinfo" in body) {
-        if (typeof body.zoneinfo !== "string") {
-            return c.json(
-                {
-                    error: "Zoneinfo must be a string.",
-                },
-                400,
-            );
-        }
+	if ("zoneinfo" in body) {
+		if (typeof body.zoneinfo !== "string") {
+			return c.json(
+				{
+					error: "Zoneinfo must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.zoneinfo = body.zoneinfo.trim() || null;
-    }
+		updates.zoneinfo = body.zoneinfo.trim() || null;
+	}
 
-    if ("locale" in body) {
-        if (typeof body.locale !== "string") {
-            return c.json(
-                {
-                    error: "Locale must be a string.",
-                },
-                400,
-            );
-        }
+	if ("locale" in body) {
+		if (typeof body.locale !== "string") {
+			return c.json(
+				{
+					error: "Locale must be a string.",
+				},
+				400,
+			);
+		}
 
-        updates.locale = body.locale.trim() || null;
-    }
+		updates.locale = body.locale.trim() || null;
+	}
 
-    if (Object.keys(updates).length === 0) {
-        return c.json(
-            {
-                error: "No profile fields provided.",
-            },
-            400,
-        );
-    }
+	if (Object.keys(updates).length === 0) {
+		return c.json(
+			{
+				error: "No profile fields provided.",
+			},
+			400,
+		);
+	}
 
-    updates.updatedAt = Date.now();
+	updates.updatedAt = Date.now();
 
-    const user = c.get("user");
-    const db = createDb(c.env.DB);
+	const user = c.get("user");
+	const db = createDb(c.env.DB);
 
-    await db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, user.id));
+	await db.update(users).set(updates).where(eq(users.id, user.id));
 
-    return c.json({
-        success: true,
-    });
+	return c.json({
+		success: true,
+	});
 });
 
 export default route;
