@@ -1,35 +1,30 @@
+<div align="center">
+
 # Contributing to Maze ID
 
 Thanks for contributing to Maze ID!
 
-Maze ID is an open-source, self-hosted identity service built on Cloudflare Workers. The repository is a TypeScript monorepo managed with Bun.
+An open-source identity platform built on Cloudflare Workers.
 
-## Requirements
+<br />
 
-Before contributing, make sure you have:
+[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun\&logoColor=white)](https://bun.sh/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?logo=react\&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite\&logoColor=white)](https://vite.dev/)
+[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono\&logoColor=white)](https://hono.dev/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare\&logoColor=white)](https://workers.cloudflare.com/)
+[![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare\&logoColor=white)](https://developers.cloudflare.com/d1/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle\&logoColor=black)](https://orm.drizzle.team/)
+[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy\&logoColor=white)](https://alchemy.run/)
 
-- [Bun](https://bun.sh/) installed
-- Git installed
-- A Cloudflare account if you need to work with deployment or infrastructure
-- A configured `.env` file for local development
+</div>
 
 ## Getting Started
 
-Clone the repository and install dependencies:
+Maze ID is a TypeScript monorepo managed with Bun.
 
-```bash
-git clone https://github.com/thehazell/id.git
-cd id
-bun install
-```
-
-Copy the example environment file:
-
-```bash
-cp .env.example .env
-```
-
-Fill in the required environment variables before running the applications.
+For installation, environment configuration, local development, and deployment instructions, see the [setup guide](./SETUP.md).
 
 ## Repository Structure
 
@@ -52,7 +47,7 @@ Fill in the required environment variables before running the applications.
 
 The project uses Bun for package management, scripts, and running TypeScript.
 
-Check `package.json` for the available scripts:
+To see the available scripts:
 
 ```bash
 bun run
@@ -164,6 +159,8 @@ Husky will automatically run the pre-commit checks.
 
 ## Commit Messages
 
+Maze ID uses [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
+
 Use concise commit messages that describe the change.
 
 Examples:
@@ -184,13 +181,13 @@ type: short description
 
 Common types include:
 
-- `feat` — new functionality
-- `fix` — bug fix
-- `refactor` — code restructuring without changing behavior
-- `docs` — documentation changes
-- `chore` — maintenance
-- `test` — tests
-- `perf` — performance improvements
+* `feat` — new functionality
+* `fix` — bug fix
+* `refactor` — code restructuring without changing behavior
+* `docs` — documentation changes
+* `chore` — maintenance
+* `test` — tests
+* `perf` — performance improvements
 
 ## Infrastructure
 
@@ -214,14 +211,14 @@ Infrastructure changes should be reviewed carefully because they may modify Clou
 
 When opening a pull request:
 
-- Explain what changed.
-- Explain why the change was needed.
-- Keep the PR focused.
-- Include relevant testing information.
-- Make sure all typechecks pass.
-- Make sure formatting passes.
-- Do not include secrets or local `.env` files.
-- Do not include unrelated changes.
+* Explain what changed.
+* Explain why the change was needed.
+* Keep the PR focused.
+* Include relevant testing information.
+* Make sure all typechecks pass.
+* Make sure formatting passes.
+* Do not include secrets or local `.env` files.
+* Do not include unrelated changes.
 
 Before requesting review, verify:
 
@@ -252,18 +249,20 @@ to document required environment variables.
 
 If you add a new required environment variable, update `.env.example` with a safe placeholder.
 
+For environment setup instructions, see [`SETUP.md`](./SETUP.md).
+
 ## Reporting Issues
 
 If you find a bug or have an idea for an improvement, open an issue with enough information for someone else to reproduce or understand the problem.
 
 Include, where applicable:
 
-- What you expected to happen
-- What actually happened
-- Steps to reproduce the issue
-- Relevant error messages
-- Environment information
-- A minimal reproduction
+* What you expected to happen
+* What actually happened
+* Steps to reproduce the issue
+* Relevant error messages
+* Environment information
+* A minimal reproduction
 
 ## License
 
