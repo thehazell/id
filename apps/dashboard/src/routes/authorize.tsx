@@ -16,6 +16,7 @@ export interface AuthorizeSearch {
 	prompt?: string;
 	max_age?: string;
 	acr_values?: string;
+	claims?: string;
 }
 
 interface OAuthClientDetails {
@@ -52,6 +53,7 @@ export const Route = createFileRoute("/authorize")({
 		max_age: typeof search.max_age === "string" ? search.max_age : undefined,
 		acr_values:
 			typeof search.acr_values === "string" ? search.acr_values : undefined,
+		claims: typeof search.claims === "string" ? search.claims : undefined,
 	}),
 	component: AuthorizePage,
 });
@@ -232,6 +234,7 @@ function AuthorizePage() {
 					code_challenge_method: search.code_challenge_method,
 					nonce: search.nonce,
 					acr_values: search.acr_values,
+					claims: search.claims,
 				}),
 			});
 
@@ -256,6 +259,7 @@ function AuthorizePage() {
 		search.code_challenge_method,
 		search.nonce,
 		search.acr_values,
+		search.claims,
 	]);
 
 	useEffect(() => {

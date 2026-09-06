@@ -20,6 +20,7 @@ interface RequestObjectClaims {
 	prompt?: string;
 	max_age?: number | string;
 	acr_values?: string;
+	claims?: string;
 	code_challenge?: string;
 	code_challenge_method?: string;
 }
@@ -100,9 +101,10 @@ function getAuthorizationRequestFromQuery(c: Context<{ Bindings: Env }>): {
 	const queryNonce = c.req.query("nonce");
 	const queryPrompt = c.req.query("prompt");
 	const queryMaxAge = c.req.query("max_age");
+	const queryAcrValues = c.req.query("acr_values");
+	const queryClaims = c.req.query("claims");
 	const queryCodeChallenge = c.req.query("code_challenge");
 	const queryCodeChallengeMethod = c.req.query("code_challenge_method");
-	const queryAcrValues = c.req.query("acr_values");
 	const requestObject = c.req.query("request");
 
 	let requestClaims: RequestObjectClaims = {};
@@ -129,6 +131,9 @@ function getAuthorizationRequestFromQuery(c: Context<{ Bindings: Env }>): {
 			? requestClaims.acr_values
 			: queryAcrValues;
 
+	const claims =
+		requestClaims.claims !== undefined ? requestClaims.claims : queryClaims;
+
 	const codeChallenge = requestClaims.code_challenge ?? queryCodeChallenge;
 
 	const codeChallengeMethod =
@@ -149,6 +154,7 @@ function getAuthorizationRequestFromQuery(c: Context<{ Bindings: Env }>): {
 			code_challenge: codeChallenge,
 			code_challenge_method: codeChallengeMethod,
 			acr_values: acrValues,
+			claims,
 		},
 		prompt,
 		maxAge,
@@ -236,8 +242,11 @@ async function authorizeGet(c: Context<{ Bindings: Env }>) {
 	const authorizeUrl = new URL("https://id.hzel.org/authorize");
 
 	authorizeUrl.searchParams.set("client_id", request.client_id);
+
 	authorizeUrl.searchParams.set("redirect_uri", request.redirect_uri);
+
 	authorizeUrl.searchParams.set("response_type", "code");
+
 	authorizeUrl.searchParams.set("scope", validation.scopes.join(" "));
 
 	if (request.state !== undefined) {
@@ -250,6 +259,10 @@ async function authorizeGet(c: Context<{ Bindings: Env }>) {
 
 	if (request.acr_values !== undefined) {
 		authorizeUrl.searchParams.set("acr_values", request.acr_values);
+	}
+
+	if (request.claims !== undefined) {
+		authorizeUrl.searchParams.set("claims", request.claims);
 	}
 
 	if (requiresLogin) {
@@ -312,6 +325,7 @@ authorize.post("/", async (c) => {
 			code_challenge: getString(form.code_challenge),
 			code_challenge_method: getString(form.code_challenge_method),
 			acr_values: getString(form.acr_values),
+			claims: getString(form.claims),
 		};
 
 		if (

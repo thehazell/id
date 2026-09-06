@@ -1,9 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-
-import { Fingerprint } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
-
+import { Fingerprint } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/toast/ToastProvider";
 import Button from "@/components/ui/Button";
@@ -48,9 +46,7 @@ function LoginPage() {
 	const { refresh } = useAuth();
 	const toast = useToast();
 	const navigate = useNavigate();
-
 	const { return_to, prompt } = Route.useSearch();
-
 	const forceLogin = prompt === "login";
 
 	const [email, setEmail] = useState("");
@@ -80,11 +76,10 @@ function LoginPage() {
 
 	async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-
 		setSubmitting(true);
 
 		try {
-			await login(email, password, rememberMe);
+			await login(email, password, rememberMe, prompt);
 			await finishLogin();
 		} catch (error) {
 			toast.error(
@@ -223,7 +218,6 @@ function LoginPage() {
 								className="h-4 w-4 text-violet-400"
 								strokeWidth={1.8}
 							/>
-
 							<span>Sign in with passkey</span>
 						</>
 					)}

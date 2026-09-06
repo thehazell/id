@@ -20,6 +20,7 @@ export interface AuthorizationRequest {
 	code_challenge?: string;
 	code_challenge_method?: string;
 	acr_values?: string;
+	claims?: string;
 }
 
 export async function validateAuthorizationRequest(
@@ -151,9 +152,10 @@ export async function createAuthorizationCode(
 		codeChallenge: request.code_challenge,
 		codeChallengeMethod: request.code_challenge_method,
 		authTime,
+		acr,
+		claims: request.claims,
 		expiresAt: now + AUTHORIZATION_CODE_DURATION,
 		createdAt: now,
-		acr,
 	});
 
 	return code;
