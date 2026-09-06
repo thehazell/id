@@ -7,9 +7,8 @@
  "scripts": {
   "format": "bunx biome format --write .",
   "check": "bunx biome check .",
+  "dev": "alchemy dev",
   "check:fix": "bunx biome check . --fix",
-  "dev:dashboard": "bun --cwd=apps/dashboard run dev",
-  "dev:api": "bun --cwd=apps/api run dev",
   "build:dashboard": "bun --cwd=apps/dashboard run build",
   "typecheck": "bunx tsc --build",
   "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
