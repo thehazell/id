@@ -50,7 +50,9 @@ route.put("/", requireAuth, async (c) => {
 
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
-	const key = `profiles/${user.id}/avatar`;
+
+	const oldKey = user.profileImageKey;
+	const key = `profiles/${user.id}/avatar/${crypto.randomUUID()}`;
 
 	await c.env.PROFILE_BUCKET.put(key, file.stream(), {
 		httpMetadata: {
@@ -66,6 +68,10 @@ route.put("/", requireAuth, async (c) => {
 			updatedAt: Date.now(),
 		})
 		.where(eq(users.id, user.id));
+
+	if (oldKey) {
+		await c.env.PROFILE_BUCKET.delete(oldKey);
+	}
 
 	return c.json({
 		success: true,

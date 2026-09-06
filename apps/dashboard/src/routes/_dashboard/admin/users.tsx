@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/Spinner";
-import { API_URL } from "@/lib/api/client";
-import { getUsers, type AdminUser } from "@/lib/api/admin";
+import { getUserAvatarUrl, getUsers, type AdminUser } from "@/lib/api/admin";
 
 export const Route = createFileRoute("/_dashboard/admin/users")({
 	staticData: {
@@ -111,10 +110,12 @@ function UserRow({
 							value={user.disabledAt ? "Disabled" : "Active"}
 							variant={user.disabledAt ? "danger" : "success"}
 						/>
+
 						<StatusBadge
 							value={user.emailVerifiedAt ? "Verified" : "Unverified"}
 							variant={user.emailVerifiedAt ? "info" : "default"}
 						/>
+
 						{user.isAdmin && <StatusBadge value="Admin" variant="admin" />}
 					</div>
 
@@ -141,7 +142,7 @@ function Avatar({ user }: { user: AdminUser }) {
 
 	return (
 		<img
-			src={`${API_URL}/api/oauth/${user.id}/avatar`}
+			src={getUserAvatarUrl(user.id)}
 			alt=""
 			className="size-10 shrink-0 rounded-full object-cover"
 			onError={() => setFailed(true)}
@@ -235,7 +236,7 @@ function Chevron({ expanded }: { expanded: boolean }) {
 		>
 			<path
 				fillRule="evenodd"
-				d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1-1.08-1.06l4.25-4.5a.75.75 0 0 1 .02 1.06Z"
+				d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1-1.08-1.06l-4.25-4.5a.75.75 0 0 1 .02 1.06l-4.25-4.5Z"
 				clipRule="evenodd"
 			/>
 		</svg>

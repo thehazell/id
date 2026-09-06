@@ -7,6 +7,7 @@ import passkeys from "./routes/passkeys";
 import oauth from "./routes/oauth";
 import wellKnown from "./routes/well-known";
 import account from "./routes/account";
+import users from "./routes/users";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -26,6 +27,7 @@ app.route("/api/passkeys", passkeys);
 app.route("/api/account", account);
 app.route("/oauth", oauth);
 app.route("/.well-known", wellKnown);
+app.route("/api/users", users);
 
 export default app;
 
